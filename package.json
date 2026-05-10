@@ -14,6 +14,7 @@
   "scripts": {
     "dev": "nuxt dev",
     "build": "nuxt build",
+    "prepare": "nuxt prepare",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test:unit": "vitest run --project unit",
