@@ -40,8 +40,10 @@ onMounted(async () => {
     return
   }
 
-  // R-AUTH-07: redirect to saved cookie path or /rooms as default
-  const redirectTo = cookieRedirect.value ?? '/rooms'
+  // R-AUTH-07: redirect to saved cookie path or /rooms as default.
+  // useSupabaseCookieRedirect returns { path: CookieRef, pluck: () => string | null }.
+  // .pluck() reads the cookie value and clears it atomically.
+  const redirectTo = cookieRedirect.pluck() ?? '/rooms'
   await router.replace(redirectTo)
 })
 </script>
