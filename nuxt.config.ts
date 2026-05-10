@@ -4,7 +4,6 @@ export default defineNuxtConfig({
 
   modules: [
     'shadcn-nuxt',
-    '@nuxtjs/supabase',
     '@pinia/nuxt',
     '@nuxt/eslint',
   ],
@@ -38,9 +37,5 @@ export default defineNuxtConfig({
   shadcn: {
     prefix: '',
     componentDir: './app/components/ui',
-  },
-
-  supabase: {
-    types: './shared/types/database.types.ts',
   },
 })
