@@ -35,12 +35,17 @@ Follow these steps on a clean checkout to get the project running locally.
 
 3. **Copy the env template and fill in values**
    ```bash
-   cp .env.example .env.local
-   # Open .env.local and set NUXT_PUBLIC_SUPABASE_URL, NUXT_PUBLIC_SUPABASE_KEY,
+   cp .env.example .env
+   # Open .env and set NUXT_PUBLIC_SUPABASE_URL, NUXT_PUBLIC_SUPABASE_KEY,
    # NUXT_SUPABASE_SERVICE_KEY. Leave NUXT_CRON_SECRET and NUXT_API_FOOTBALL_KEY
    # empty for now -- they are used by slice 3 (matches + predictions).
    ```
    Get your Supabase URL and keys from **Project Settings -> API** in the Supabase dashboard.
+
+   > **Why `.env` and not `.env.local`?** `@nuxtjs/supabase` reads `process.env` at
+   > Nuxt module setup time (during `nuxt prepare`). Nuxt only loads `.env` in that
+   > phase; `.env.local` is read later for runtime, after modules already grabbed
+   > their config. Both files are gitignored, so use `.env`.
 
 4. **Link the Supabase project**
    ```bash
