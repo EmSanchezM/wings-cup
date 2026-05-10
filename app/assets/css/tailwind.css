@@ -1,0 +1,7 @@
+@import "tailwindcss";
+
+@theme {
+  /* Primary color — OKLCH for perceptual uniformity across hues */
+  --color-primary: oklch(55% 0.2 250);
+  --color-primary-foreground: oklch(98% 0.01 250);
+}

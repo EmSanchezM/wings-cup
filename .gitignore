@@ -1,5 +1,29 @@
 .atl/
-node_modules
+
+# Nuxt
+.nuxt/
+.output/
+dist/
+
+# Dependencies
+node_modules/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Testing
+coverage/
+
+# OS
+.DS_Store
+Thumbs.db
 
 # Local-only references (informal docs superseded by openspec/)
 docs/especificaciones-mundial-bet.md
