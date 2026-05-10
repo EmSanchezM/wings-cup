@@ -19,7 +19,11 @@
     "test:unit": "vitest run --project unit",
     "test:nuxt": "vitest run --project nuxt",
     "test:e2e": "playwright test",
-    "gen-types": "supabase gen types typescript --linked > shared/types/database.types.ts"
+    "gen-types": "supabase gen types typescript --linked > shared/types/database.types.ts",
+    "db:push": "supabase db push",
+    "db:reset": "supabase db reset",
+    "db:diff": "supabase db diff",
+    "db:pull": "supabase db pull"
   },
   "dependencies": {
     "@nuxtjs/supabase": "^2.0.6",
