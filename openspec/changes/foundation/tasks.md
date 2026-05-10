@@ -134,18 +134,18 @@ Chain strategy: stacked-to-main
 
 ### 3.1 Supabase module auth config
 
-- [ ] 3.1.1 Add `supabase: { useSsrCookies: true, redirectOptions: { login: '/auth/login', callback: '/auth/confirm', include: ['/rooms(/*)?', '/admin(/*)?'], exclude: ['/', '/join/*', '/auth/*'], saveRedirectToCookie: true } }` to `nuxt.config.ts` — acceptance: redirect guard active [ref: R-AUTH-01, R-AUTH-02, R-AUTH-08, R-AUTH-19, R-AUTH-20, R-AUTH-21]
-- [ ] 3.1.2 Confirm `SUPABASE_URL` and `SUPABASE_ANON_KEY` env vars are NOT mirrored into `runtimeConfig.public` (module reads them directly) — acceptance: no duplication in nuxt.config [ref: R-AUTH-03, design §9]
+- [x] 3.1.1 Add `supabase: { useSsrCookies: true, redirectOptions: { login: '/auth/login', callback: '/auth/confirm', include: ['/rooms(/*)?', '/admin(/*)?'], exclude: ['/', '/join/*', '/auth/*'], saveRedirectToCookie: true } }` to `nuxt.config.ts` — acceptance: redirect guard active [ref: R-AUTH-01, R-AUTH-02, R-AUTH-08, R-AUTH-19, R-AUTH-20, R-AUTH-21]
+- [x] 3.1.2 Confirm `SUPABASE_URL` and `SUPABASE_ANON_KEY` env vars are NOT mirrored into `runtimeConfig.public` (module reads them directly) — acceptance: no duplication in nuxt.config [ref: R-AUTH-03, design §9]
 
 ### 3.2 Auth pages
 
-- [ ] 3.2.1 Create `app/pages/auth/login.vue` with Google OAuth button calling `signInWithOAuth({ provider: 'google', options: { redirectTo } })` and magic-link email form calling `signInWithOtp` — acceptance: page renders; R-AUTH-05, R-AUTH-09, R-AUTH-13 satisfied
-- [ ] 3.2.2 Create `app/pages/auth/confirm.vue`: on `onMounted`, read `code` from query; if present call `useSupabaseClient().auth.exchangeCodeForSession(code)`, then redirect to saved cookie path or `/rooms`; if no code redirect to `/auth/login` silently — acceptance: R-AUTH-06, R-AUTH-07, S-AUTH-10 [ref: R-AUTH-06, R-AUTH-07]
-- [ ] 3.2.3 Create stub `app/pages/index.vue` (landing page, empty) and `app/pages/join/[code].vue` (empty stub) so the routes exist and excluded paths render without error — acceptance: S-AUTH-07, S-AUTH-08 [ref: R-AUTH-20]
+- [x] 3.2.1 Create `app/pages/auth/login.vue` with Google OAuth button calling `signInWithOAuth({ provider: 'google', options: { redirectTo } })` and magic-link email form calling `signInWithOtp` — acceptance: page renders; R-AUTH-05, R-AUTH-09, R-AUTH-13 satisfied
+- [x] 3.2.2 Create `app/pages/auth/confirm.vue`: on `onMounted`, read `code` from query; if present call `useSupabaseClient().auth.exchangeCodeForSession(code)`, then redirect to saved cookie path or `/rooms`; if no code redirect to `/auth/login` silently — acceptance: R-AUTH-06, R-AUTH-07, S-AUTH-10 [ref: R-AUTH-06, R-AUTH-07]
+- [x] 3.2.3 Create stub `app/pages/index.vue` (landing page, empty) and `app/pages/join/[code].vue` (empty stub) so the routes exist and excluded paths render without error — acceptance: S-AUTH-07, S-AUTH-08 [ref: R-AUTH-20]
 
 ### 3.3 Server auth utility
 
-- [ ] 3.3.1 Create `server/utils/auth.ts` with:
+- [x] 3.3.1 Create `server/utils/auth.ts` with:
   - `verifyCronSecret(event)` helper that reads `runtimeConfig.cronSecret` and validates `Authorization: Bearer <secret>` header (throws 401 if missing/wrong — documented now, used in slice 3)
   - `revalidateSuperAdmin(event)` helper that uses service-role client to re-read `profiles.is_super_admin` for the current user (throws 403 if false)
   - Use the verified helper name from task 2.1.1 for the service-role client call
@@ -153,39 +153,39 @@ Chain strategy: stacked-to-main
 
 ### 3.4 Environment contract files
 
-- [ ] 3.4.1 Write `.env.example` with `NUXT_PUBLIC_SUPABASE_URL=`, `NUXT_PUBLIC_SUPABASE_KEY=`, `NUXT_SUPABASE_SERVICE_KEY=` (comment: server-only — NEVER expose), `CRON_SECRET=` (comment: server-only, slice 3) — acceptance: R-DEP-05, R-DEP-06, R-AUTH-22, R-SEC-39 [ref: R-DEP-05, R-DEP-06, R-AUTH-22]
-- [ ] 3.4.2 Add `.env` and `.env.local` to `.gitignore`; confirm `.env.example` is NOT gitignored — acceptance: S-DEP-03 [ref: R-DEP-07]
+- [x] 3.4.1 Write `.env.example` with `NUXT_PUBLIC_SUPABASE_URL=`, `NUXT_PUBLIC_SUPABASE_KEY=`, `NUXT_SUPABASE_SERVICE_KEY=` (comment: server-only — NEVER expose), `CRON_SECRET=` (comment: server-only, slice 3) — acceptance: R-DEP-05, R-DEP-06, R-AUTH-22, R-SEC-39 [ref: R-DEP-05, R-DEP-06, R-AUTH-22]
+- [x] 3.4.2 Add `.env` and `.env.local` to `.gitignore`; confirm `.env.example` is NOT gitignored — acceptance: S-DEP-03 [ref: R-DEP-07]
 
 ### 3.5 Vercel config
 
-- [ ] 3.5.1 Write `vercel.json` at repo root: `{ "crons": [] }` — acceptance: valid JSON, `crons` key present with empty array; Vercel auto-detects Nuxt [ref: R-DEP-01, R-DEP-02, R-DEP-03, R-DEP-04, Locked Decision C]
+- [x] 3.5.1 Write `vercel.json` at repo root: `{ "crons": [] }` — acceptance: valid JSON, `crons` key present with empty array; Vercel auto-detects Nuxt [ref: R-DEP-01, R-DEP-02, R-DEP-03, R-DEP-04, Locked Decision C]
 
 ### 3.6 README
 
-- [ ] 3.6.1 Write `README.md` with "Boot from scratch" section (7 ordered steps: clone, pnpm install, copy env, supabase link, supabase db push, gen-types, dev); note Docker as optional alternative; document `pnpm gen-types` as post-migration step; document Vitest v4 `beforeAll` gotcha; include manual super-admin bootstrap SQL snippet — acceptance: R-DEP-13, R-DEP-14, R-DEP-15, R-PS-23, Open Implementation Question 1 [ref: R-DEP-13, R-DEP-14, R-DEP-15, R-PS-23]
+- [x] 3.6.1 Write `README.md` with "Boot from scratch" section (7 ordered steps: clone, pnpm install, copy env, supabase link, supabase db push, gen-types, dev); note Docker as optional alternative; document `pnpm gen-types` as post-migration step; document Vitest v4 `beforeAll` gotcha; include manual super-admin bootstrap SQL snippet — acceptance: R-DEP-13, R-DEP-14, R-DEP-15, R-PS-23, Open Implementation Question 1 [ref: R-DEP-13, R-DEP-14, R-DEP-15, R-PS-23]
 
 ### 3.7 Vitest workspace and smoke tests
 
-- [ ] 3.7.1 Write `vitest.workspace.ts` defining two projects: `unit` (`include: ['tests/unit/**/*.test.ts']`, `environment: 'node'`) and `nuxt` (`include: ['tests/nuxt/**/*.test.ts']`, `environment: 'nuxt'`) — acceptance: both projects discovered [ref: R-PS-16, design §10.1]
-- [ ] 3.7.2 Write `vitest.config.ts` baseline: `defineConfig({ test: { globals: true, reporters: ['default'] } })` — acceptance: file present [ref: design §10.2]
-- [ ] 3.7.3 Write `shared/schemas/scoring-rules.ts` with `scoringRulesSchema` Zod object validating `{ exact_score: z.number(), correct_goal_diff: z.number(), correct_result: z.number() }` and a `defaultScoringRules` const matching the SQL default `{ exact_score: 5, correct_goal_diff: 3, correct_result: 1 }` — acceptance: Zod parse succeeds in test [ref: S-PS-04, design §10.4]
-- [ ] 3.7.4 Write `tests/unit/scoring-rules.schema.test.ts`: import `scoringRulesSchema` and `defaultScoringRules`; assert `scoringRulesSchema.parse(defaultScoringRules)` succeeds without throwing; assert `scoringRulesSchema.parse({ exact_score: 5, correct_goal_diff: 3, correct_result: 1 })` returns expected shape — acceptance: `pnpm run test:unit` exits green [ref: R-PS-18, S-PS-04]
-- [ ] 3.7.5 Write `tests/nuxt/app.smoke.test.ts` using v4 `beforeAll` pattern: import `mountSuspended` from `@nuxt/test-utils/runtime`; in `beforeAll` import `App` from `~/app.vue`; `it('mounts')`: `const wrapper = await mountSuspended(App); expect(wrapper.element).toBeDefined()` — acceptance: `pnpm run test:nuxt` exits green [ref: R-PS-17, R-PS-19, S-PS-05, design §10.3]
+- [x] 3.7.1 Write `vitest.workspace.ts` defining two projects: `unit` (`include: ['tests/unit/**/*.test.ts']`, `environment: 'node'`) and `nuxt` (`include: ['tests/nuxt/**/*.test.ts']`, `environment: 'nuxt'`) — acceptance: both projects discovered [ref: R-PS-16, design §10.1]
+- [x] 3.7.2 Write `vitest.config.ts` baseline: `defineConfig({ test: { globals: true, reporters: ['default'] } })` — acceptance: file present [ref: design §10.2]
+- [x] 3.7.3 Write `shared/schemas/scoring-rules.ts` with `scoringRulesSchema` Zod object validating `{ exact_score: z.number(), correct_goal_diff: z.number(), correct_result: z.number() }` and a `defaultScoringRules` const matching the SQL default `{ exact_score: 5, correct_goal_diff: 3, correct_result: 1 }` — acceptance: Zod parse succeeds in test [ref: S-PS-04, design §10.4]
+- [x] 3.7.4 Write `tests/unit/scoring-rules.schema.test.ts`: import `scoringRulesSchema` and `defaultScoringRules`; assert `scoringRulesSchema.parse(defaultScoringRules)` succeeds without throwing; assert `scoringRulesSchema.parse({ exact_score: 5, correct_goal_diff: 3, correct_result: 1 })` returns expected shape — acceptance: `pnpm run test:unit` exits green [ref: R-PS-18, S-PS-04]
+- [x] 3.7.5 Write `tests/nuxt/app.smoke.test.ts` using v4 `beforeAll` pattern: import `mountSuspended` from `@nuxt/test-utils/runtime`; in `beforeAll` import `App` from `~/app.vue`; `it('mounts')`: `const wrapper = await mountSuspended(App); expect(wrapper.element).toBeDefined()` — acceptance: `pnpm run test:nuxt` exits green [ref: R-PS-17, R-PS-19, S-PS-05, design §10.3]
 
 ### 3.8 shadcn-vue Button (smoke)
 
-- [ ] 3.8.1 Run `pnpm dlx shadcn-vue@latest add button` (or equivalent for the pinned shadcn-nuxt version) to scaffold `app/components/ui/button/index.ts` and `Button.vue` — acceptance: file exists; PR 3 reviewer can confirm shadcn + Tailwind v4 wiring is functional [ref: design §Open Implementation Questions Q6]
+- [x] 3.8.1 Run `pnpm dlx shadcn-vue@latest add button` (or equivalent for the pinned shadcn-nuxt version) to scaffold `app/components/ui/button/index.ts` and `Button.vue` — acceptance: file exists; PR 3 reviewer can confirm shadcn + Tailwind v4 wiring is functional [ref: design §Open Implementation Questions Q6]
 
 ### 3.9 Pre-PR-open checklist (PR 3)
 
-- [ ] `pnpm lint` exits 0
-- [ ] `pnpm test:unit` exits green
-- [ ] `pnpm test:nuxt` exits green
-- [ ] `pnpm dev` boots without errors; `/auth/login` renders; `/rooms` redirects to `/auth/login`
-- [ ] `vercel.json` is valid JSON with `"crons": []`
-- [ ] `.env.example` present with all 4 vars documented
-- [ ] No service key value in `dist/_nuxt/*` after `pnpm build`
-- [ ] Changed lines ≤ 230
+- [x] `pnpm lint` exits 0
+- [x] `pnpm test:unit` exits green
+- [x] `pnpm test:nuxt` exits green
+- [x] `pnpm dev` boots without errors; `/auth/login` renders; `/rooms` redirects to `/auth/login`
+- [x] `vercel.json` is valid JSON with `"crons": []`
+- [x] `.env.example` present with all 4 vars documented
+- [x] No service key value in `dist/_nuxt/*` after `pnpm build`
+- [ ] Changed lines ≤ 230 (exceeded — auto-chain delivery, documented in PR body)
 
 ---
 
