@@ -58,7 +58,7 @@ rules:
 slices:
   - name: foundation
     status: pending
-    description: Nuxt 4.4 + Supabase setup, DB schema, RLS, basic auth (Google/Facebook + magic link)
+    description: Nuxt 4.4 + Supabase setup, DB schema, RLS, basic auth (Google + magic link)
   - name: rooms-and-invitations
     status: pending
     description: Create rooms, invite codes, hybrid guest→registered flow

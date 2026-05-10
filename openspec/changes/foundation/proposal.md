@@ -6,7 +6,7 @@
 
 ## Outcome
 
-A reviewer can clone the repo, run `npm install && npm run dev`, sign in with Google/Facebook/magic-link, and see their `profiles` row created automatically. A migration command (`supabase db push`) creates **all 7 tables**, **RLS on every table** (closing the 3 spec gaps in `matches`, `invitations`, `audit_log`), and **all triggers** (`calculate_points`, `lock_started_predictions`, `handle_new_user`, `handle_updated_at`). The test runner is wired with one unit and one Nuxt smoke test, ESLint flat config is active, and `npm run gen-types` produces typed DB access from `shared/types/database.types.ts`. **REPLICA IDENTITY FULL** is set on `room_members` so slice 4 realtime works without a follow-up migration.
+A reviewer can clone the repo, run `pnpm install && pnpm dev`, sign in with Google/magic-link, and see their `profiles` row created automatically. A migration command (`supabase db push`) creates **all 7 tables**, **RLS on every table** (closing the 3 spec gaps in `matches`, `invitations`, `audit_log`), and **all triggers** (`calculate_points`, `lock_started_predictions`, `handle_new_user`, `handle_updated_at`). The test runner is wired with one unit and one Nuxt smoke test, ESLint flat config is active, and `pnpm gen-types` produces typed DB access from `shared/types/database.types.ts`. **REPLICA IDENTITY FULL** is set on `room_members` so slice 4 realtime works without a follow-up migration.
 
 This slice unblocks every other slice: rooms (2) needs the schema and auth; matches/predictions (3) needs the matches table and the locking function; ranking (4) needs realtime config; admin (5) needs `audit_log`.
 
@@ -23,7 +23,7 @@ The implementer (sdd-apply) will follow this order. Each step has a correspondin
 5. **Triggers migration** (`supabase/migrations/00003_triggers.sql`) — `handle_new_user` (reads `app_metadata->>'provider'`), `handle_updated_at` (moddatetime on `profiles` and `predictions`), `calculate_points`, `lock_started_predictions`.
 6. **Auth wiring** — `app/pages/auth/login.vue`, `app/pages/auth/confirm.vue` (PKCE callback), redirect middleware via module `redirectOptions`.
 7. **Test infrastructure** — `vitest.config.ts`, `vitest.workspace.ts` (unit + nuxt projects), one unit test (Zod schema smoke), one Nuxt component test (`app.vue` mounts).
-8. **Type generation & deploy contract** — `npm run gen-types` script, `vercel.json` placeholder (no cron jobs yet — slice 3 adds them), `.env.example` documenting every variable.
+8. **Type generation & deploy contract** — `pnpm gen-types` script, `vercel.json` placeholder (no cron jobs yet — slice 3 adds them), `.env.example` documenting every variable.
 9. **README boot block** — minimum docs so a teammate can run the project.
 
 ---
@@ -41,10 +41,10 @@ The implementer (sdd-apply) will follow this order. Each step has a correspondin
 | 5 | Schema for **all 7 tables** including `REPLICA IDENTITY FULL` on `room_members` | Avoids painful re-migrations later |
 | 6 | RLS for **all 7 tables** including `matches`, `invitations`, `audit_log`, `profiles` | Spec gap closure; security-first |
 | 7 | Triggers: `calculate_points`, `lock_started_predictions`, `handle_new_user`, `handle_updated_at` | DB logic the spec mandates |
-| 8 | OAuth Google + Facebook + Magic Link routes | Hybrid signup is the product's USP |
+| 8 | OAuth Google + Magic Link routes | Hybrid signup is the product's USP |
 | 9 | Vitest v4 + `@nuxt/test-utils` v4 + ESLint flat + Prettier with smoke tests | Strict TDD turns ON after this slice |
 | 10 | Vercel deploy baseline + env contract | CI deploy works on day one |
-| 11 | `npm run gen-types` → `shared/types/database.types.ts` | Typed DB access for every slice |
+| 11 | `pnpm gen-types` → `shared/types/database.types.ts` | Typed DB access for every slice |
 
 ### Out of scope (defer to later slices)
 
@@ -92,7 +92,7 @@ These were analyzed in exploration. The recommended option is now the project de
 | 1 | Migrations strategy | `supabase/migrations/` + Supabase CLI | Official; `db push/reset/diff`; CI-friendly; no drift |
 | 2 | Auth integration | `@nuxtjs/supabase` v2 (SSR cookies on, PKCE, `redirectOptions`) | Opinionated but covers the hybrid flow with minimal code |
 | 3 | Schema location | `supabase/migrations/` at repo root | CLI default; zero friction |
-| 4 | Type generation | `npm run gen-types` → `shared/types/database.types.ts` | Manual but reliable; documented in README |
+| 4 | Type generation | `pnpm gen-types` → `shared/types/database.types.ts` | Manual but reliable; documented in README |
 | 5 | Testing | `@nuxt/test-utils` v4 + Vitest v4, split projects (`unit`, `nuxt`) | Official; `mountSuspended`; v4 `beforeAll` pattern documented in README |
 | 6 | Folder layout | Nuxt 4 `app/` + `server/` + `shared/` + `supabase/` + `tests/` | Future-proof; greenfield, zero migration cost |
 | 7 | shadcn-vue | `shadcn-nuxt` module + `@tailwindcss/vite` (NOT `@nuxtjs/tailwindcss`) | Tailwind v4 requires Vite plugin; community module covers Nuxt 4 |
@@ -199,9 +199,9 @@ Notes:
 
 | Flow | Sequence |
 |------|----------|
-| **OAuth signup (Google/Facebook)** | `signInWithOAuth({ provider, options: { redirectTo: '/auth/confirm' } })` → Supabase callback hits `/auth/confirm` → cookie session stored → `handle_new_user` trigger inserts `profiles` row with `auth_provider = 'google'\|'facebook'`, `is_guest = false` → redirect to saved cookie path |
+| **OAuth signup (Google)** | `signInWithOAuth({ provider: 'google', options: { redirectTo: '/auth/confirm' } })` → Supabase callback hits `/auth/confirm` → cookie session stored → `handle_new_user` trigger inserts `profiles` row with `auth_provider = 'google'`, `is_guest = false` → redirect to saved cookie path |
 | **Magic-link signup (guest)** | User submits name + email on `/join/[code]` → server calls `auth.signInWithOtp({ email, options: { emailRedirectTo: '/auth/confirm', data: { display_name } } })` → user clicks email → `/auth/confirm` exchanges token → trigger inserts profile with `auth_provider = 'magic_link'`, `is_guest = true` |
-| **Guest → registered link** | Logged-in guest clicks "Vincular Google" → `linkIdentity({ provider: 'google' })` → Supabase merges identities (same `user_id`) → server-side endpoint flips `profiles.is_guest = false`, sets `auth_provider = 'google'` |
+| **Guest → registered link** | Logged-in guest clicks "Vincular cuenta Google" → `linkIdentity({ provider: 'google' })` → Supabase merges identities (same `user_id`) → server-side endpoint flips `profiles.is_guest = false`, sets `auth_provider = 'google'` |
 | **Login (returning)** | Same as signup but Supabase recognizes existing user; trigger fires only on first signup |
 
 `redirectOptions` config (locked):
@@ -246,11 +246,11 @@ After foundation merges, **Strict TDD Mode activates** for slices 2–5. The `sd
 |-------|-------|-----------|
 | Scaffolding (config, env, README, deps) | 12 | ~250 |
 | Migrations (schema + RLS + triggers) | 3 SQL files | ~350 |
-| Auth pages + module config | 4 | ~150 |
+| Auth pages + module config | 4 | ~120 |
 | Tests + ESLint + workspace config | 6 | ~150 |
-| **Total** | **~25 files** | **~900 lines** |
+| **Total** | **~25 files** | **~870 lines** |
 
-**900 lines > 400 budget.** Single PR violates the chained-pr skill unless `size:exception` is granted.
+**870 lines > 400 budget.** Single PR violates the chained-pr skill unless `size:exception` is granted.
 
 ### Recommended split — 3 chained PRs (stacked-to-main)
 
@@ -267,8 +267,8 @@ PR 3 (foundation/auth-tests)  ──┘
 | PR | Scope | Est. lines | Depends on |
 |----|-------|-----------|-----------|
 | **PR 1** | Project init: Nuxt 4.4 config, modules wiring (Pinia, Tailwind v4, shadcn-nuxt skeleton), ESLint flat, Prettier, `package.json`, `tsconfig`, base `app.vue`, directory skeleton, `.env.example`, `README` boot block | ~300 | nothing |
-| **PR 2** | The 3 migration files: `00001_schema.sql`, `00002_rls.sql`, `00003_triggers.sql` + `npm run gen-types` script + `shared/types/database.types.ts` (initial generated artifact, committed) | ~350 | PR 1 (`package.json` script) |
-| **PR 3** | `@nuxtjs/supabase` config + `app/pages/auth/login.vue` + `app/pages/auth/confirm.vue` + Vitest workspace + smoke tests + `vercel.json` skeleton | ~250 | PR 1, PR 2 |
+| **PR 2** | The 3 migration files: `00001_schema.sql`, `00002_rls.sql`, `00003_triggers.sql` + `pnpm gen-types` script + `shared/types/database.types.ts` (initial generated artifact, committed) | ~350 | PR 1 (`package.json` script) |
+| **PR 3** | `@nuxtjs/supabase` config + `app/pages/auth/login.vue` + `app/pages/auth/confirm.vue` + Vitest workspace + smoke tests + `vercel.json` skeleton | ~220 | PR 1, PR 2 |
 
 **Why stacked-to-main not feature-branch chain:** foundation is bootstrap. Each PR is independently shippable to a fresh repo (PR 1 alone is a runnable Nuxt 4 app; PR 2 alone is just SQL files; PR 3 needs both, but a reviewer can approve it after PR 1+2 merge). Feature-branch tracker pattern adds review overhead with no benefit here.
 
@@ -276,7 +276,7 @@ PR 3 (foundation/auth-tests)  ──┘
 
 **`auto-chain`** — the split is mechanical and the dependencies are clean. Apply phase implements PR 1 first, then PR 2 atop it, then PR 3.
 
-If the user prefers `single-pr`, a `size:exception` label MUST be applied before review (foundation is genuinely indivisible without losing review quality, but 900 lines is the high end).
+If the user prefers `single-pr`, a `size:exception` label MUST be applied before review (foundation is genuinely indivisible without losing review quality, but 870 lines is the high end).
 
 ---
 
@@ -318,13 +318,13 @@ For DB migrations specifically: **never edit a committed migration file.** Alway
 
 Foundation is "done" when **all** of these are true:
 
-- [ ] `npm install` completes with no peer-dep warnings on a clean checkout
-- [ ] `npm run dev` boots Nuxt 4.4 on localhost without errors
-- [ ] `npm run lint` passes (ESLint flat config active)
-- [ ] `npm run test:unit` runs the unit smoke test green
-- [ ] `npm run test:nuxt` runs the Nuxt component smoke test green
+- [ ] `pnpm install` completes with no peer-dep warnings on a clean checkout
+- [ ] `pnpm dev` boots Nuxt 4.4 on localhost without errors
+- [ ] `pnpm lint` passes (ESLint flat config active)
+- [ ] `pnpm test:unit` runs the unit smoke test green
+- [ ] `pnpm test:nuxt` runs the Nuxt component smoke test green
 - [ ] `supabase db push` (against dev project) applies all 3 migrations without errors
-- [ ] `npm run gen-types` produces a non-empty `shared/types/database.types.ts`
+- [ ] `pnpm gen-types` produces a non-empty `shared/types/database.types.ts`
 - [ ] Logging in with Google creates a `profiles` row with `auth_provider = 'google'`, `is_guest = false`
 - [ ] Logging in with magic link creates a `profiles` row with `auth_provider = 'magic_link'`, `is_guest = true`
 - [ ] `SELECT * FROM matches` as an unauthenticated user returns 0 rows (RLS enforced)

@@ -1,6 +1,6 @@
 # Exploration: foundation — Nuxt 4.4 + Supabase Project Setup
 
-**Recommendation up front:** Use the Nuxt 4 `app/` directory structure, Supabase CLI migrations under `supabase/migrations/`, `@nuxtjs/supabase` module v2 with `useSsrCookies: true`, Tailwind v4 + shadcn-vue via the `shadcn-nuxt` module (`@tailwindcss/vite` — NOT `@nuxtjs/tailwindcss`), `@nuxt/test-utils` v4 + Vitest v4 for testing, and automated type generation via `npm run gen-types`. Seven architectural decisions analyzed below.
+**Recommendation up front:** Use the Nuxt 4 `app/` directory structure, Supabase CLI migrations under `supabase/migrations/`, `@nuxtjs/supabase` module v2 with `useSsrCookies: true`, Tailwind v4 + shadcn-vue via the `shadcn-nuxt` module (`@tailwindcss/vite` — NOT `@nuxtjs/tailwindcss`), `@nuxt/test-utils` v4 + Vitest v4 for testing, and automated type generation via `pnpm gen-types`. Seven architectural decisions analyzed below.
 
 ---
 
@@ -84,7 +84,7 @@ Magic link users are standard Supabase auth users (`is_guest: true` in profiles)
 
 | Approach | Pros | Cons | Effort |
 |----------|------|------|--------|
-| **A. npm script** (`gen-types`) | Simple; always reflects actual DB | Manual trigger | Low |
+| **A. pnpm script** (`gen-types`) | Simple; always reflects actual DB | Manual trigger | Low |
 | **B. GitHub Actions auto-gen** | No drift | Overkill for solo; CI minutes | Medium |
 | **C. Manual maintenance** | None | Always drifts | High maintenance |
 | **D. Zod-only runtime types** | Unified | Must sync Zod to DB manually | High |
@@ -100,7 +100,7 @@ Configure in `nuxt.config.ts`:
 supabase: { types: './shared/types/database.types.ts' }
 ```
 
-Document `npm run gen-types` in README as a required step after every migration.
+Document `pnpm gen-types` in README as a required step after every migration.
 
 ---
 
@@ -191,7 +191,7 @@ wings-cup/
 
 | Approach | Pros | Cons | Effort |
 |----------|------|------|--------|
-| **A. `shadcn-nuxt` module + CLI** | Auto-imports; `npx shadcn-vue@radix add`; Tailwind v4 supported; Nuxt 4 compatible | Community-maintained module; monitor stability | Low |
+| **A. `shadcn-nuxt` module + CLI** | Auto-imports; `pnpm dlx shadcn-vue@radix add`; Tailwind v4 supported; Nuxt 4 compatible | Community-maintained module; monitor stability | Low |
 | **B. Manual copy** | Full control | Tedious; no auto-import | Medium |
 
 **Recommendation: A.** Use `@tailwindcss/vite` (NOT `@nuxtjs/tailwindcss`) for Tailwind v4.
