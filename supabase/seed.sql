@@ -1,0 +1,20 @@
+-- =============================================================================
+-- seed.sql — Super-admin bootstrap (manual step)
+-- =============================================================================
+-- This file is loaded by `supabase db reset` (local development only).
+-- It is NOT applied by `supabase db push` — never auto-applied to production.
+--
+-- Usage after first sign-in:
+--   1. Sign in with Google OAuth or magic link on the dev app.
+--   2. Find your auth.users UUID in the Supabase dashboard > Authentication > Users.
+--   3. Run the UPDATE below in the Supabase dashboard SQL editor (or via psql
+--      with the service role) — replacing <your-auth-user-id> with your UUID.
+--   4. Full bootstrap instructions are also in README.md § "Super-admin setup".
+--
+-- IMPORTANT: Use the service role or the Supabase dashboard SQL editor.
+--            The lock_super_admin_column() trigger blocks this via the anon/
+--            authenticated JWT roles.
+-- =============================================================================
+
+-- Uncomment and fill in your UUID after first sign-in:
+-- UPDATE profiles SET is_super_admin = TRUE WHERE id = '<your-auth-user-id>';
