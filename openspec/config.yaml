@@ -1,0 +1,77 @@
+schema: spec-driven
+
+context: |
+  Tech stack: Nuxt 4.4 (Vue 3 + Nitro), Tailwind CSS, shadcn-vue, Pinia, Zod, Supabase, API-Football
+  Architecture: SSR + server API; Postgres + RLS + Realtime via Supabase; Vercel cron for match sync
+  Testing: Vitest (unit/component) + Playwright (e2e) — to be installed in foundation slice
+  Style: TypeScript strict; Conventional Commits; no Co-Authored-By trailers; Rioplatense Spanish for human-facing comments
+
+testing:
+  strict_tdd: false
+  test_command: ""
+  build_command: ""
+  coverage_threshold: 0
+  layers:
+    unit: false
+    integration: false
+    e2e: false
+  planned:
+    unit: vitest
+    integration: vitest + supertest
+    e2e: playwright
+    coverage: vitest --coverage
+    linter: eslint (@nuxt/eslint)
+    type_checker: vue-tsc
+    formatter: prettier
+  note: |
+    No runner installed yet (fresh repo). Foundation slice installs Vitest + Playwright;
+    flip strict_tdd to true after that and update test_command/build_command accordingly.
+
+rules:
+  proposal:
+    - State the user-visible outcome up front
+    - Surface deviations from docs/especificaciones-mundial-bet.md explicitly (the spec is a flexible v0 memo, not a contract)
+    - Include rollback plan for risky changes (RLS, schema, auth)
+  specs:
+    - Use Given/When/Then for scenarios
+    - Use RFC 2119 keywords (MUST, SHALL, SHOULD, MAY)
+    - Capture security and RLS expectations explicitly
+  design:
+    - Include sequence diagrams for auth flows, prediction lock, and points calculation
+    - Document architecture decisions with rationale
+    - Call out triple-validation (Zod + RLS + DB constraints) where applicable
+  tasks:
+    - Group by phase, use hierarchical numbering
+    - Keep tasks completable in one session
+    - Surface Review Workload Forecast (changed-line estimate, chained PR risk)
+  apply:
+    - Follow existing code patterns (none yet — establish them in foundation)
+    - tdd: false
+    - test_command: ""
+  verify:
+    test_command: ""
+    build_command: ""
+    coverage_threshold: 0
+  archive:
+    - Warn before merging destructive deltas (especially RLS or schema removals)
+
+slices:
+  - name: foundation
+    status: pending
+    description: Nuxt 4.4 + Supabase setup, DB schema, RLS, basic auth (Google/Facebook + magic link)
+  - name: rooms-and-invitations
+    status: pending
+    description: Create rooms, invite codes, hybrid guest→registered flow
+    depends_on: [foundation]
+  - name: matches-and-predictions
+    status: pending
+    description: API-Football sync, prediction UI, automatic kickoff lock
+    depends_on: [rooms-and-invitations]
+  - name: scoring-and-realtime
+    status: pending
+    description: calculate_points trigger, denormalized total_points, realtime ranking
+    depends_on: [matches-and-predictions]
+  - name: admin-panel
+    status: pending
+    description: Super admin views, manual corrections with audit log
+    depends_on: [scoring-and-realtime]
