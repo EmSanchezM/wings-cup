@@ -31,44 +31,44 @@ Chain strategy: stacked-to-main
 
 ### 1.1 Directory skeleton
 
-- [ ] 1.1.1 Create `app/`, `app/assets/css/`, `app/components/ui/`, `app/composables/`, `app/layouts/`, `app/middleware/`, `app/pages/`, `app/plugins/`, `app/stores/` — acceptance: all dirs exist on disk [ref: R-PS-01, R-PS-04]
-- [ ] 1.1.2 Create `server/api/.gitkeep`, `shared/types/.gitkeep`, `shared/schemas/.gitkeep`, `shared/utils/.gitkeep`, `supabase/migrations/`, `tests/unit/`, `tests/nuxt/`, `public/` — acceptance: R-PS-02 and R-PS-03 satisfied [ref: R-PS-02, R-PS-03]
+- [x] 1.1.1 Create `app/`, `app/assets/css/`, `app/components/ui/`, `app/composables/`, `app/layouts/`, `app/middleware/`, `app/pages/`, `app/plugins/`, `app/stores/` — acceptance: all dirs exist on disk [ref: R-PS-01, R-PS-04]
+- [x] 1.1.2 Create `server/api/.gitkeep`, `shared/types/.gitkeep`, `shared/schemas/.gitkeep`, `shared/utils/.gitkeep`, `supabase/migrations/`, `tests/unit/`, `tests/nuxt/`, `public/` — acceptance: R-PS-02 and R-PS-03 satisfied [ref: R-PS-02, R-PS-03]
 
 ### 1.2 `package.json`
 
-- [ ] 1.2.1 Write `package.json` with `"type": "module"`, engines `node >= 20`, and all production deps: `nuxt@^4.4`, `@nuxtjs/supabase@^2`, `@pinia/nuxt`, `shadcn-nuxt`, `@tailwindcss/vite`, `tailwindcss@^4`, `zod` — acceptance: no unknown peer-dep warnings [ref: R-PS-06]
-- [ ] 1.2.2 Add devDeps: `vitest@^4`, `@nuxt/test-utils@^4`, `@playwright/test`, `eslint`, `@nuxt/eslint`, `typescript` — acceptance: `pnpm install` exits 0 [ref: R-PS-06, R-PS-08]
-- [ ] 1.2.3 Add pnpm scripts: `"dev"`, `"build"`, `"lint": "eslint ."`, `"test:unit": "vitest run --project unit"`, `"test:nuxt": "vitest run --project nuxt"`, `"test:e2e": "playwright test"`, `"gen-types": "supabase gen types typescript --linked > shared/types/database.types.ts"` — acceptance: all scripts defined [ref: R-PS-18, R-PS-19, R-PS-20, R-DB-27, R-DEP-09]
+- [x] 1.2.1 Write `package.json` with `"type": "module"`, engines `node >= 20`, and all production deps: `nuxt@^4.4`, `@nuxtjs/supabase@^2`, `@pinia/nuxt`, `shadcn-nuxt`, `@tailwindcss/vite`, `tailwindcss@^4`, `zod` — acceptance: no unknown peer-dep warnings [ref: R-PS-06]
+- [x] 1.2.2 Add devDeps: `vitest@^4`, `@nuxt/test-utils@^4`, `@playwright/test`, `eslint`, `@nuxt/eslint`, `typescript` — acceptance: `pnpm install` exits 0 [ref: R-PS-06, R-PS-08]
+- [x] 1.2.3 Add pnpm scripts: `"dev"`, `"build"`, `"lint": "eslint ."`, `"test:unit": "vitest run --project unit"`, `"test:nuxt": "vitest run --project nuxt"`, `"test:e2e": "playwright test"`, `"gen-types": "supabase gen types typescript --linked > shared/types/database.types.ts"` — acceptance: all scripts defined [ref: R-PS-18, R-PS-19, R-PS-20, R-DB-27, R-DEP-09]
 
 ### 1.3 TypeScript and Nuxt config
 
-- [ ] 1.3.1 Write `tsconfig.json` extending `.nuxt/tsconfig.json` with `"strict": true` — acceptance: file present, extends correct path [ref: R-PS-07]
-- [ ] 1.3.2 Write `nuxt.config.ts` with `compatibilityDate: '2025-11-01'`, `future: { compatibilityVersion: 4 }`, modules array `['shadcn-nuxt', '@nuxtjs/supabase', '@pinia/nuxt']`, `vite.plugins: [tailwindcss()]`, `css: ['~/assets/css/tailwind.css']`, `runtimeConfig.supabaseServiceKey: ''`, `runtimeConfig.cronSecret: ''`, `shadcn: { prefix: '', componentDir: './app/components/ui' }`, `typescript: { strict: true, typeCheck: true }` — acceptance: `pnpm dev` starts [ref: R-PS-09, R-PS-10, R-PS-12, R-PS-13]
-- [ ] 1.3.3 Add `supabase: { types: './shared/types/database.types.ts' }` to `nuxt.config.ts` — acceptance: key present in config [ref: R-DB-29, R-AUTH-04]
+- [x] 1.3.1 Write `tsconfig.json` extending `.nuxt/tsconfig.json` with `"strict": true` — acceptance: file present, extends correct path [ref: R-PS-07]
+- [x] 1.3.2 Write `nuxt.config.ts` with `compatibilityDate: '2025-11-01'`, `future: { compatibilityVersion: 4 }`, modules array `['shadcn-nuxt', '@nuxtjs/supabase', '@pinia/nuxt']`, `vite.plugins: [tailwindcss()]`, `css: ['~/assets/css/tailwind.css']`, `runtimeConfig.supabaseServiceKey: ''`, `runtimeConfig.cronSecret: ''`, `shadcn: { prefix: '', componentDir: './app/components/ui' }`, `typescript: { strict: true, typeCheck: true }` — acceptance: `pnpm dev` starts [ref: R-PS-09, R-PS-10, R-PS-12, R-PS-13]
+- [x] 1.3.3 Add `supabase: { types: './shared/types/database.types.ts' }` to `nuxt.config.ts` — acceptance: key present in config [ref: R-DB-29, R-AUTH-04]
 
 ### 1.4 Tailwind v4
 
-- [ ] 1.4.1 Create `app/assets/css/tailwind.css` with `@import "tailwindcss";` and an `@theme {}` block with at least one `--color-primary` OKLCH token — acceptance: dev server applies class without PostCSS error [ref: R-PS-11, S-PS-03]
+- [x] 1.4.1 Create `app/assets/css/tailwind.css` with `@import "tailwindcss";` and an `@theme {}` block with at least one `--color-primary` OKLCH token — acceptance: dev server applies class without PostCSS error [ref: R-PS-11, S-PS-03]
 
 ### 1.5 ESLint
 
-- [ ] 1.5.1 Write `eslint.config.mjs` importing from `@nuxt/eslint` with stylistic rules enabled and no Prettier dependency — acceptance: `pnpm lint` exits 0 on clean tree [ref: R-PS-14, R-PS-15, S-PS-06]
+- [x] 1.5.1 Write `eslint.config.mjs` importing from `@nuxt/eslint` with stylistic rules enabled and no Prettier dependency — acceptance: `pnpm lint` exits 0 on clean tree [ref: R-PS-14, R-PS-15, S-PS-06]
 
 ### 1.6 Root app component
 
-- [ ] 1.6.1 Create `app/app.vue` with `<template><NuxtPage /></template>` — acceptance: `mountSuspended` succeeds in smoke test [ref: R-PS-21]
+- [x] 1.6.1 Create `app/app.vue` with `<template><NuxtPage /></template>` — acceptance: `mountSuspended` succeeds in smoke test [ref: R-PS-21]
 
 ### 1.7 Supabase config file
 
-- [ ] 1.7.1 Create `supabase/config.toml` (minimal `[project]` section; `project_id` left as placeholder) — acceptance: `supabase link` can read the file [ref: R-DB-03, Locked Decision A]
+- [x] 1.7.1 Create `supabase/config.toml` (minimal `[project]` section; `project_id` left as placeholder) — acceptance: `supabase link` can read the file [ref: R-DB-03, Locked Decision A]
 
 ### 1.8 Pre-PR-open checklist (PR 1)
 
-- [ ] `pnpm lint` exits 0
-- [ ] `pnpm dev` boots without errors
-- [ ] All required directories and files created
-- [ ] No secrets committed; `.env` gitignored (`.gitignore` includes `.env`)
-- [ ] Changed lines ≤ 310
+- [x] `pnpm lint` exits 0
+- [x] `pnpm dev` boots without errors (confirmed via `pnpm build` smoke — succeeds)
+- [x] All required directories and files created
+- [x] No secrets committed; `.env` gitignored (`.gitignore` includes `.env`)
+- [x] Changed lines ≤ 310 (actual: 168 lines excluding lockfile)
 
 ---
 

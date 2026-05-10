@@ -3,6 +3,11 @@
   "type": "module",
   "version": "0.0.1",
   "private": true,
+  "author": {
+    "email": "emsanchez891@gmail.com",
+    "name": "Moises Sanchez",
+    "url": "https://emsanchez.com/"
+  },
   "engines": {
     "node": ">=20"
   },
