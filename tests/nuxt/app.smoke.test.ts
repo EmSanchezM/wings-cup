@@ -15,7 +15,7 @@ describe('App (smoke)', () => {
 
   beforeAll(async () => {
     // v4 BREAKING CHANGE: import the component inside beforeAll, not at the module top level.
-    const { default: App } = await import('~/app.vue')
+    const { default: App } = await import('../../app/app.vue')
     wrapper = await mountSuspended(App)
   })
 
