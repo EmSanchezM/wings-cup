@@ -25,5 +25,10 @@ coverage/
 .DS_Store
 Thumbs.db
 
+# Supabase CLI (local state, link credentials, temp files — never commit)
+supabase/.temp/
+supabase/.branches/
+.supabase/
+
 # Local-only references (informal docs superseded by openspec/)
 docs/especificaciones-mundial-bet.md
