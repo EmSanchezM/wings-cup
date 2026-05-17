@@ -25,7 +25,7 @@
     "db:reset": "supabase db reset",
     "db:diff": "supabase db diff",
     "db:pull": "supabase db pull",
-    "seed:matches": "supabase db execute --file supabase/seeds/matches.sql"
+    "seed:matches": "supabase db query --linked -f supabase/seeds/matches.sql"
   },
   "dependencies": {
     "@nuxtjs/supabase": "^2.0.6",
