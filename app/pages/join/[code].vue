@@ -18,18 +18,23 @@ const code = route.params.code as string
 const preview = ref<RoomPreview | null>(null)
 const isLoadingPreview = ref(true)
 const previewNotFound = ref(false)
+const previewError = ref<string | null>(null)
 
-const provider = ref<'magic_link' | 'google'>('magic_link')
 const email = ref('')
 const displayName = ref('')
 const magicLinkSent = ref(false)
 const isAuthLoading = ref(false)
 
 const isJoining = ref(false)
-const error = ref<string | null>(null)
+const joinError = ref<string | null>(null)
 
 function nextUrl() {
   return `${window.location.origin}/auth/confirm?next=/join/${code}`
+}
+
+function fetchStatus(err: unknown): number | null {
+  const e = err as { statusCode?: number, status?: number, response?: { status?: number } }
+  return e?.statusCode ?? e?.status ?? e?.response?.status ?? null
 }
 
 async function loadPreview() {
@@ -37,13 +42,11 @@ async function loadPreview() {
     preview.value = await roomClient.previewByCode(code)
   }
   catch (e) {
-    const message = e instanceof Error ? e.message : ''
-    // Nitro maps RoomNotFoundError -> 404 -> $fetch throws an error mentioning 404
-    if (message.includes('404')) {
+    if (fetchStatus(e) === 404) {
       previewNotFound.value = true
     }
     else {
-      error.value = message || 'No se pudo cargar la sala'
+      previewError.value = e instanceof Error ? e.message : 'No se pudo cargar la sala'
     }
   }
   finally {
@@ -54,13 +57,13 @@ async function loadPreview() {
 async function autoJoin() {
   if (!user.value || !preview.value || isJoining.value) return
   isJoining.value = true
-  error.value = null
+  joinError.value = null
   try {
     const { roomId } = await roomClient.joinByCode(code, { provider: 'google' })
     await router.replace(`/rooms/${roomId}`)
   }
   catch (e) {
-    error.value = e instanceof Error ? e.message : 'No se pudo entrar a la sala'
+    joinError.value = e instanceof Error ? e.message : 'No se pudo entrar a la sala'
     isJoining.value = false
   }
 }
@@ -68,7 +71,7 @@ async function autoJoin() {
 async function sendMagicLink() {
   if (!email.value.trim() || !displayName.value.trim()) return
   isAuthLoading.value = true
-  error.value = null
+  joinError.value = null
   try {
     const { error: otpError } = await supabase.auth.signInWithOtp({
       email: email.value.trim(),
@@ -81,7 +84,7 @@ async function sendMagicLink() {
     magicLinkSent.value = true
   }
   catch (e) {
-    error.value = e instanceof Error ? e.message : 'No se pudo enviar el enlace mágico'
+    joinError.value = e instanceof Error ? e.message : 'No se pudo enviar el enlace mágico'
   }
   finally {
     isAuthLoading.value = false
@@ -90,7 +93,7 @@ async function sendMagicLink() {
 
 async function signInWithGoogle() {
   isAuthLoading.value = true
-  error.value = null
+  joinError.value = null
   try {
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -99,7 +102,7 @@ async function signInWithGoogle() {
     if (oauthError) throw oauthError
   }
   catch (e) {
-    error.value = e instanceof Error ? e.message : 'No se pudo iniciar sesión con Google'
+    joinError.value = e instanceof Error ? e.message : 'No se pudo iniciar sesión con Google'
     isAuthLoading.value = false
   }
 }
@@ -135,6 +138,20 @@ watch(user, (next) => {
           </h1>
           <p class="text-sm text-muted-foreground">
             El código <span class="font-mono">{{ code }}</span> no corresponde a ninguna sala activa.
+          </p>
+        </div>
+      </template>
+
+      <template v-else-if="previewError">
+        <div class="text-center space-y-2">
+          <h1 class="text-xl font-semibold">
+            No se pudo cargar la sala
+          </h1>
+          <p
+            class="text-sm text-destructive"
+            role="alert"
+          >
+            {{ previewError }}
           </p>
         </div>
       </template>
@@ -226,11 +243,11 @@ watch(user, (next) => {
         </template>
 
         <p
-          v-if="error"
+          v-if="joinError"
           class="text-center text-sm text-destructive"
           role="alert"
         >
-          {{ error }}
+          {{ joinError }}
         </p>
       </template>
     </div>

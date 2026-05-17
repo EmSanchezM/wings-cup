@@ -13,7 +13,13 @@ export interface CreateRoomDeps {
 export async function createRoomHandler(deps: CreateRoomDeps): Promise<{ room: Room }> {
   const invite_code = await generateInviteCode(deps.supabase)
 
-  const { data, error } = await deps.supabase
+  // Two-step pattern: INSERT without RETURNING, then SELECT to refetch.
+  // Postgres applies the SELECT USING policy to RETURNING rows, but
+  // rooms_select_member requires the user to be in room_members for THIS
+  // room — which the on_room_created trigger only guarantees once the
+  // INSERT statement has fully completed. Splitting the operation lets
+  // the trigger commit the membership row before the SELECT runs.
+  const { error: insertError } = await deps.supabase
     .from('rooms')
     .insert({
       name: deps.body.name,
@@ -21,10 +27,16 @@ export async function createRoomHandler(deps: CreateRoomDeps): Promise<{ room: R
       invite_code,
       created_by: deps.userId,
     })
-    .select()
+
+  if (insertError) throw new Error(insertError.message)
+
+  const { data, error: selectError } = await deps.supabase
+    .from('rooms')
+    .select('*')
+    .eq('invite_code', invite_code)
     .single()
 
-  if (error) throw new Error(error.message)
-  if (!data) throw new Error('rooms insert returned no data')
+  if (selectError) throw new Error(selectError.message)
+  if (!data) throw new Error('rooms insert succeeded but row was not visible')
   return { room: data }
 }

@@ -5,46 +5,47 @@ import { createRoomHandler } from '../../../server/handlers/create-room'
 import { InviteCodeCollisionError } from '../../../server/utils/invite-code'
 
 type LookupResult = { data: { invite_code: string } | null; error: null }
-type InsertResult = { data: Record<string, unknown> | null; error: { message: string } | null }
+type InsertResult = { error: { message: string } | null }
+type RefetchResult = { data: Record<string, unknown> | null; error: { message: string } | null }
 
 interface MockOptions {
   inviteCodeLookups?: LookupResult[]
   insertResult?: InsertResult
+  refetchResult?: RefetchResult
+}
+
+const DEFAULT_REFETCH: RefetchResult = {
+  data: {
+    id: 'room-uuid',
+    name: 'placeholder',
+    prize_description: '',
+    invite_code: 'XXXXXX',
+    created_by: 'user-uuid',
+    scoring_rules: {},
+    status: 'active',
+    created_at: '2026-05-17T12:00:00Z',
+  },
+  error: null,
 }
 
 function makeMockClient(opts: MockOptions = {}) {
   const lookupQueue: LookupResult[] = [...(opts.inviteCodeLookups ?? [{ data: null, error: null }])]
   const maybeSingle = vi.fn(async () => lookupQueue.shift() ?? { data: null, error: null })
-  const eq = vi.fn(() => ({ maybeSingle }))
-  const selectLookup = vi.fn(() => ({ eq }))
+  const refetchSingle = vi.fn(async () => opts.refetchResult ?? DEFAULT_REFETCH)
 
-  const insertSingle = vi.fn(async () =>
-    opts.insertResult ?? {
-      data: {
-        id: 'room-uuid',
-        name: 'placeholder',
-        prize_description: '',
-        invite_code: 'XXXXXX',
-        created_by: 'user-uuid',
-        scoring_rules: {},
-        status: 'active',
-        created_at: '2026-05-17T12:00:00Z',
-      },
-      error: null,
-    },
-  )
-  const insertSelect = vi.fn(() => ({ single: insertSingle }))
-  const insert = vi.fn(() => ({ select: insertSelect }))
+  const eq = vi.fn(() => ({ maybeSingle, single: refetchSingle }))
+  const select = vi.fn(() => ({ eq }))
+  const insert = vi.fn(async () => opts.insertResult ?? { error: null })
 
-  const from = vi.fn(() => ({ select: selectLookup, insert }))
+  const from = vi.fn(() => ({ select, insert }))
 
   const client = { from } as unknown as SupabaseClient<Database>
-  return { client, spies: { from, insert, insertSingle } }
+  return { client, spies: { from, select, insert, refetchSingle, eq } }
 }
 
 describe('createRoomHandler (R-ROOMS-01, R-ROOMS-04, R-ROOMS-05, R-ROOMS-06)', () => {
-  it('returns the inserted room wrapped in { room }', async () => {
-    const insertedRow = {
+  it('returns the refetched room wrapped in { room }', async () => {
+    const refetchedRow = {
       id: 'room-1',
       name: 'Amigos',
       prize_description: 'Una birra',
@@ -54,7 +55,7 @@ describe('createRoomHandler (R-ROOMS-01, R-ROOMS-04, R-ROOMS-05, R-ROOMS-06)', (
       status: 'active',
       created_at: '2026-05-17T12:00:00Z',
     }
-    const { client } = makeMockClient({ insertResult: { data: insertedRow, error: null } })
+    const { client } = makeMockClient({ refetchResult: { data: refetchedRow, error: null } })
 
     const result = await createRoomHandler({
       supabase: client,
@@ -62,7 +63,7 @@ describe('createRoomHandler (R-ROOMS-01, R-ROOMS-04, R-ROOMS-05, R-ROOMS-06)', (
       body: { name: 'Amigos', prize_description: 'Una birra' },
     })
 
-    expect(result).toEqual({ room: insertedRow })
+    expect(result).toEqual({ room: refetchedRow })
   })
 
   it('inserts a row with name, prize_description, invite_code, and created_by', async () => {
@@ -96,6 +97,21 @@ describe('createRoomHandler (R-ROOMS-01, R-ROOMS-04, R-ROOMS-05, R-ROOMS-06)', (
     expect(inserted.prize_description).toBe('')
   })
 
+  it('refetches by the generated invite_code', async () => {
+    const { client, spies } = makeMockClient()
+    await createRoomHandler({
+      supabase: client,
+      userId: 'user-1',
+      body: { name: 'X', prize_description: '' },
+    })
+
+    // First .eq is the invite-code uniqueness probe; the second is the refetch.
+    const lastEqCall = spies.eq.mock.calls.at(-1)!
+    expect(lastEqCall[0]).toBe('invite_code')
+    const inserted = spies.insert.mock.calls[0][0] as Record<string, unknown>
+    expect(lastEqCall[1]).toBe(inserted.invite_code)
+  })
+
   it('propagates InviteCodeCollisionError when retries are exhausted', async () => {
     const { client } = makeMockClient({
       inviteCodeLookups: [
@@ -116,7 +132,7 @@ describe('createRoomHandler (R-ROOMS-01, R-ROOMS-04, R-ROOMS-05, R-ROOMS-06)', (
 
   it('throws when the insert returns an error', async () => {
     const { client } = makeMockClient({
-      insertResult: { data: null, error: { message: 'permission denied' } },
+      insertResult: { error: { message: 'permission denied' } },
     })
 
     await expect(
@@ -126,6 +142,20 @@ describe('createRoomHandler (R-ROOMS-01, R-ROOMS-04, R-ROOMS-05, R-ROOMS-06)', (
         body: { name: 'NoAuth', prize_description: '' },
       }),
     ).rejects.toThrow(/permission denied/)
+  })
+
+  it('throws when the refetch returns an error', async () => {
+    const { client } = makeMockClient({
+      refetchResult: { data: null, error: { message: 'refetch failed' } },
+    })
+
+    await expect(
+      createRoomHandler({
+        supabase: client,
+        userId: 'user-1',
+        body: { name: 'X', prize_description: '' },
+      }),
+    ).rejects.toThrow(/refetch failed/)
   })
 
   it('does not call insert when invite code generation throws', async () => {
