@@ -13,3 +13,6 @@ export interface RoomPreview {
   creatorName: string
   isActive: boolean
 }
+
+export type { CreateRoomInput } from '../schemas/room.schema'
+export type { JoinPayload } from '../schemas/join.schema'
