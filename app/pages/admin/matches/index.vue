@@ -2,7 +2,6 @@
 import { onMounted, reactive, ref } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import type { Database } from '~~/shared/types/database.types'
 import type { MatchListItem, MatchUpdate } from '~~/shared/types/matches'
 
 interface EditDraft {
@@ -11,8 +10,6 @@ interface EditDraft {
   away_score: number | undefined
 }
 
-const user = useSupabaseUser()
-const supabase = useSupabaseClient<Database>()
 const router = useRouter()
 
 const matchesState = useMatches()
@@ -26,21 +23,19 @@ const lockingNow = ref(false)
 const lockedCount = ref<number | null>(null)
 
 async function ensureSuperAdmin() {
-  if (!user.value) {
+  try {
+    const { isSuperAdmin } = await $fetch<{ isSuperAdmin: boolean }>(
+      '/api/me/is-super-admin',
+    )
+    if (!isSuperAdmin) {
+      await router.replace('/')
+      return
+    }
+    isAuthorised.value = true
+    await matchesState.load()
+  } catch {
     await router.replace('/')
-    return
   }
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('is_super_admin')
-    .eq('id', user.value.id)
-    .single()
-  if (error || !data?.is_super_admin) {
-    await router.replace('/')
-    return
-  }
-  isAuthorised.value = true
-  await matchesState.load()
 }
 
 function startEdit(match: MatchListItem) {
