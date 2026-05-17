@@ -5,6 +5,12 @@ import { Input } from '@/components/ui/input'
 import type { Database } from '~~/shared/types/database.types'
 import type { MatchListItem, MatchUpdate } from '~~/shared/types/matches'
 
+interface EditDraft {
+  status: NonNullable<MatchUpdate['status']>
+  home_score: number | undefined
+  away_score: number | undefined
+}
+
 const user = useSupabaseUser()
 const supabase = useSupabaseClient<Database>()
 const router = useRouter()
@@ -13,7 +19,7 @@ const matchesState = useMatches()
 const isAuthorised = ref(false)
 const checkingAuth = ref(true)
 
-const editDrafts = reactive<Record<string, MatchUpdate>>({})
+const editDrafts = reactive<Record<string, EditDraft>>({})
 const savingId = ref<string | null>(null)
 const saveError = ref<string | null>(null)
 const lockingNow = ref(false)
@@ -41,8 +47,8 @@ function startEdit(match: MatchListItem) {
   if (editDrafts[match.id]) return
   editDrafts[match.id] = {
     status: match.status,
-    home_score: match.home_score,
-    away_score: match.away_score,
+    home_score: match.home_score ?? undefined,
+    away_score: match.away_score ?? undefined,
   }
 }
 
@@ -187,7 +193,7 @@ onMounted(async () => {
               @submit.prevent="saveEdit(match.id)"
             >
               <select
-                v-model="editDrafts[match.id].status"
+                v-model="editDrafts[match.id]!.status"
                 class="rounded-md border px-2 py-1 text-sm"
               >
                 <option value="scheduled">scheduled</option>
@@ -196,7 +202,7 @@ onMounted(async () => {
                 <option value="postponed">postponed</option>
               </select>
               <Input
-                v-model.number="editDrafts[match.id].home_score"
+                v-model.number="editDrafts[match.id]!.home_score"
                 type="number"
                 min="0"
                 max="50"
@@ -204,7 +210,7 @@ onMounted(async () => {
                 class="w-20"
               />
               <Input
-                v-model.number="editDrafts[match.id].away_score"
+                v-model.number="editDrafts[match.id]!.away_score"
                 type="number"
                 min="0"
                 max="50"

@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url'
 import tailwindcss from '@tailwindcss/vite'
 
 export default defineNuxtConfig({
@@ -57,6 +58,6 @@ export default defineNuxtConfig({
       exclude: ['/', '/join/*', '/auth/*'],
       saveRedirectToCookie: true,
     },
-    types: './shared/types/database.types.ts',
+    types: fileURLToPath(new URL('./shared/types/database.types.ts', import.meta.url)),
   },
 })
