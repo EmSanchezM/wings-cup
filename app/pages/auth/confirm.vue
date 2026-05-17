@@ -40,9 +40,15 @@ onMounted(async () => {
     return
   }
 
-  // R-AUTH-07: redirect to saved cookie path or /rooms as default.
-  // useSupabaseCookieRedirect returns { path: CookieRef, pluck: () => string | null }.
-  // .pluck() reads the cookie value and clears it atomically.
+  // R-AUTH-24 / R-INV-06: honour ?next= when it points at a join page,
+  // otherwise fall back to the saved cookie path or /rooms.
+  // isSafeNext rejects open-redirects, lowercase codes, and shape mismatches (R-INV-07 / R-SEC-42).
+  const nextParam = route.query.next
+  if (isSafeNext(nextParam)) {
+    await router.replace(nextParam)
+    return
+  }
+
   const redirectTo = cookieRedirect.pluck() ?? '/rooms'
   await router.replace(redirectTo)
 })
