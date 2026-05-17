@@ -16,12 +16,13 @@ export function buildCandidate(): string {
   crypto.getRandomValues(bytes)
   let candidate = ''
   for (let i = 0; i < CODE_LENGTH; i++) {
-    let byte = bytes[i]
+    // bytes[i] is defined because i < CODE_LENGTH and getRandomValues filled the array.
+    let byte = bytes[i]!
     // Rejection-sample bytes >= 252 to avoid modulo bias (256 % 36 != 0).
     while (byte >= 252) {
       const replacement = new Uint8Array(1)
       crypto.getRandomValues(replacement)
-      byte = replacement[0]
+      byte = replacement[0]!
     }
     candidate += ALPHABET[byte % ALPHABET.length]
   }

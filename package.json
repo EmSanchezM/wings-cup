@@ -29,6 +29,7 @@
   "dependencies": {
     "@nuxtjs/supabase": "^2.0.6",
     "@pinia/nuxt": "^0.11.3",
+    "@supabase/supabase-js": "^2.105.4",
     "@tailwindcss/vite": "^4.3.0",
     "@vueuse/core": "^14.3.0",
     "class-variance-authority": "^0.7.1",

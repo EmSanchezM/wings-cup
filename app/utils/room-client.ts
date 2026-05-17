@@ -1,4 +1,3 @@
-import type { $Fetch } from 'ofetch'
 import type { CreateRoomInput } from '../../shared/schemas/room.schema'
 import type { JoinPayload } from '../../shared/schemas/join.schema'
 import type {
@@ -8,7 +7,7 @@ import type {
   RoomPreview,
 } from '../../shared/types/rooms'
 
-export function makeRoomClient(fetchImpl: $Fetch) {
+export function makeRoomClient(fetchImpl: typeof $fetch) {
   return {
     async createRoom(input: CreateRoomInput): Promise<Room> {
       const { room } = await fetchImpl<{ room: Room }>('/api/rooms', {
