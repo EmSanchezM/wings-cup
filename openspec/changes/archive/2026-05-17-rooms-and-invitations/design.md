@@ -217,7 +217,7 @@ export async function generateInviteCode(
 import { z } from 'zod'
 
 export const createRoomSchema = z.object({
-  name: z.string().trim().min(1, 'name required').max(80, 'name too long'),
+  name: z.string().trim().min(1, 'name required').max(100, 'name too long'),
   prize_description: z.string().trim().max(500, 'prize_description too long').default(''),
 })
 
@@ -226,9 +226,11 @@ export type CreateRoomInput = z.infer<typeof createRoomSchema>
 
 **Testable seams**:
 - Empty `name` → reject.
-- 81-char `name` → reject.
+- 101-char `name` → reject.
 - Missing `prize_description` → defaults to `''`.
 - 501-char `prize_description` → reject.
+
+**Reconciliation (W-01)**: Spec requires `name` max=100; design had 80. Implementation shipped at spec=100. Updated to match shipped reality.
 
 ### 4.3 `shared/schemas/join.schema.ts`
 
@@ -238,7 +240,7 @@ import { z } from 'zod'
 const magicLinkSchema = z.object({
   provider: z.literal('magic_link'),
   email: z.string().email(),
-  display_name: z.string().trim().min(1, 'display_name required').max(60),
+  display_name: z.string().trim().min(1, 'display_name required').max(50),
 })
 
 const googleSchema = z.object({
@@ -260,6 +262,8 @@ export type JoinPayload = z.infer<typeof joinPayloadSchema>
 - `{provider:'magic_link', email:'bad'}` → reject.
 - `{provider:'google'}` → accept.
 - `{provider:'unknown'}` → reject (discriminator).
+
+**Reconciliation (W-02)**: Spec requires `display_name` max=50; design had 60. Implementation shipped at spec=50. Updated to match shipped reality.
 
 ---
 
@@ -486,12 +490,14 @@ export function useRoom() {
 }
 ```
 
-**Public API** (return types declared; no implicit `any`):
+**Public API** (5 exports; all async functions — no refs):
 - `createRoom(input)` → `Promise<Room>`
 - `listRooms()` → `Promise<RoomListItem[]>`
 - `getRoom(id)` → `Promise<{ room: Room, members: RoomMember[] }>`
 - `previewByCode(code)` → `Promise<RoomPreview>`
 - `joinByCode(code, payload)` → `Promise<{ room: { id, name } }>`
+
+**Reconciliation (W-05)**: Tasks.md T-29/T-30 drafted a composable with 3 async functions + 2 reactive refs (`room`, `error`). The design and shipped implementation use 5 pure async functions (no refs). Design's stateless approach is cleaner and is what shipped. **Design is canonical.**
 
 ### 6.2 `app/pages/rooms/index.vue`
 
@@ -691,13 +697,58 @@ After migration `00005`, `Tables<'rooms'>` will include `prize_description: stri
 | `POST /api/join/[code]` insert | `serverSupabaseClient` (user JWT) | `rm_insert_self` (`user_id = auth.uid()`) | RLS validates the user can only insert themselves; trigger `rooms_owner_membership` does NOT fire (only AFTER INSERT on `rooms`). |
 | Trigger `on_room_created` insert into `room_members` | DB-internal (SECURITY DEFINER) | bypasses `rm_insert_self` | Same transaction as the room INSERT; failure rolls everything back. |
 
+**Reconciliation notes (from verify report)**:
+- **W-03 (Join schema shape)**: Spec drafted a single object with `code` in body; design (and shipped code) use a discriminated union `{ provider: 'magic_link' | 'google', … }` with code in URL path. The design approach is superior (allows different payloads per auth flow) and is what shipped. **Spec was internally inconsistent; design is canonical.**
+- **W-04 (Join response shape)**: Spec specified `{ roomId }` but design (and implementation) returns `{ room: { id, name } }`. The design response is richer and is what shipped. **Design is canonical.**
+
 ---
 
-## 10. Test seams (Strict TDD)
+## 10. Architectural patterns
+
+### 10.1 Clean Architecture: Handler Testing Strategy
+
+The project implements a **Clean Architecture layering** for endpoint logic:
+
+- **`server/handlers/` (pure business logic)** — export pure functions `createRoom(input, client)`, `listRooms(user, client)`, etc. These are framework-agnostic: given input + Supabase client, they compute and return results. Tested exhaustively via `pnpm test:unit` with mocked clients.
+- **`server/api/` (thin Nitro wrappers)** — call the handler, extract HTTP details (statusCode, statusMessage), catch errors and respond. Minimal logic; no direct unit tests needed. The logic is proven via handler tests.
+
+**Why this pattern**: Handler tests are faster, run in Node environment (not Nuxt), and avoid HTTP mocking boilerplate. The Nitro layer is thin enough that defects there are obvious in manual/smoke testing. This is the project's established convention (documented in engram `conventions/endpoint-testing`).
+
+**Verify report note**: Tasks T-12, T-15, T-19, T-22 specified Nuxt HTTP-level tests for endpoints. These were replaced by handler unit tests (flagged as `INTENTIONAL_DEVIATION` in verify-report). **Not a defect.**
+
+### 10.2 Two-Step Room Creation: PostgREST RETURNING + RLS Timing
+
+`server/handlers/create-room.ts` uses a **two-step pattern**: 
+
+```ts
+// Step 1: INSERT without RETURNING
+const { error: insertErr } = await supabase
+  .from('rooms')
+  .insert({ name, prize_description, invite_code, created_by: user.sub })
+
+if (insertErr) throw insertErr
+
+// Step 2: SELECT to refetch the room
+const { data: room, error: selectErr } = await supabase
+  .from('rooms')
+  .select('*')
+  .eq('id', insertedId)
+  .single()
+```
+
+**Why**: PostgREST's `.insert().select().single()` translates to `INSERT … RETURNING`, which applies the `SELECT USING` policy (`rooms_select_member`) to the newly-inserted row **before** the `AFTER INSERT` trigger has committed the owner's `room_members` row. Result: RLS fails with 42501 (permission denied) even though the trigger's `rm_insert_self` INSERT is happening in the same transaction.
+
+**Solution**: Separate the INSERT from the SELECT. By refetch time, the trigger has committed in the same transaction — the room is now a member-readable row.
+
+**Test coverage**: `tests/unit/handlers/create-room.test.ts` mocks a scenario where refetch finds the room, proving the pattern works end-to-end.
+
+---
+
+## 11. Test seams (Strict TDD)
 
 Strict TDD is ACTIVE. Every implementation file pairs with a failing test BEFORE the implementation is written. Test runners: `pnpm test:unit`, `pnpm test:nuxt`.
 
-### 10.1 Unit (`tests/unit/`)
+### 11.1 Unit (`tests/unit/`)
 
 | File | Pure-function seam | Assertions (RED first) |
 |------|---------------------|------------------------|
@@ -707,7 +758,7 @@ Strict TDD is ACTIVE. Every implementation file pairs with a failing test BEFORE
 | `tests/unit/join.schema.test.ts` | `joinPayloadSchema.parse` | Accept magic_link with valid payload; reject magic_link with empty `display_name`; accept google; reject unknown provider. |
 | `tests/unit/is-safe-next.test.ts` | `isSafeNext(value)` | Cases from §7.3 threat model (5+ assertions). |
 
-### 10.2 Nuxt (`tests/nuxt/`)
+### 11.2 Nuxt (`tests/nuxt/`)
 
 Use the v4 `beforeAll` import pattern (per `tests/nuxt/app.smoke.test.ts`). Mock `$fetch` via `vi.mock` of `'#app'`.
 
@@ -717,13 +768,13 @@ Use the v4 `beforeAll` import pattern (per `tests/nuxt/app.smoke.test.ts`). Mock
 | `tests/nuxt/join-page.test.ts` | `useRoom` composable + `useSupabaseUser` mocked | Preview renders room name + creator; auth tab toggles `display_name` field for magic_link only; submit calls `signInWithOtp` with `data.display_name` and `emailRedirectTo` containing `?next=`. |
 | `tests/nuxt/confirm-next.test.ts` | `route.query.next` + `router.replace` mocked | `?next=/join/AB12CD` → `router.replace('/join/AB12CD')`; `?next=https://evil.com` → falls through to cookie/`/rooms`; missing `next` → existing cookie/`/rooms` behavior preserved. |
 
-### 10.3 (Optional, recommended) DB integration test
+### 11.3 (Optional, recommended) DB integration test
 
 Out of scope for slice 2 if not yet wired (no Supabase test helper exists in repo). Document this gap as a follow-up: a `tests/db/on-room-created.sql.test` that inserts a room and asserts a `room_members` row with `role='owner'` exists, exercised against a local `supabase start` instance. **For slice 2**: rely on manual smoke-test in PR-1 description.
 
 ---
 
-## 11. Migration ordering and re-gen workflow
+## 12. Migration ordering and re-gen workflow
 
 ```
 supabase/migrations/
@@ -746,7 +797,7 @@ CI gate: a step that runs `pnpm gen-types && git diff --exit-code shared/types/d
 
 ---
 
-## 12. Sequence diagram — magic-link join flow
+## 13. Sequence diagram — magic-link join flow
 
 ```
 User                Browser              Supabase Auth        Email      auth.users     handle_new_user      Browser                /api/join
@@ -792,7 +843,7 @@ User                Browser              Supabase Auth        Email      auth.us
 
 ---
 
-## 13. Risks (design-level)
+## 14. Risks (design-level)
 
 | Risk | Severity | Design mitigation |
 |------|----------|-------------------|
@@ -805,7 +856,7 @@ User                Browser              Supabase Auth        Email      auth.us
 
 ---
 
-## 14. Open questions
+## 15. Open questions
 
 NONE. All proposal-level open questions were locked by the user 2026-05-15. The two design-level workflow notes (CI gate for type generation; integration test for trigger) are recommendations, not blockers.
 
