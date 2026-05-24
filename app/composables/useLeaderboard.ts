@@ -15,6 +15,8 @@ export function useLeaderboard(roomId: string) {
       const result = await client.getLeaderboard(roomId)
       data.value = result.leaderboard
     } catch (err) {
+      const status = (err as { statusCode?: number })?.statusCode
+      if (status === 401) { useSessionExpired().setExpired(); return }
       error.value = err instanceof Error ? err.message : 'unknown_error'
       data.value = []
     } finally {

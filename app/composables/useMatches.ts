@@ -14,6 +14,8 @@ export function useMatches() {
     try {
       data.value = await client.getMatches(filters)
     } catch (err) {
+      const status = (err as { statusCode?: number })?.statusCode
+      if (status === 401) { useSessionExpired().setExpired(); return }
       error.value = err instanceof Error ? err.message : 'unknown_error'
       data.value = []
     } finally {
