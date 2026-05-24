@@ -44,6 +44,43 @@ New capability. Full spec for super-admin match management: authorisation gate, 
 **Scenarios**:
 - **Given** a super-admin navigates to `/admin/matches` **When** the page loads **Then** the match list is displayed with edit controls and the "Lock Predictions Now" button is visible.
 - **Given** a regular authenticated user navigates to `/admin/matches` **When** the page guard evaluates `is_super_admin` **Then** the user is redirected to `/` and no match data is fetched.
+- **Given** an authenticated user whose JWT has since expired navigates to `/admin/matches` **When** the page's `ensureSuperAdmin()` function receives `reason === 'unauthenticated'` from the API **Then** `useSessionExpired().setExpired()` is called AND the user is NOT silently redirected to `/` AND the `<SessionExpiredToast />` becomes visible.
+
+### R-ADMIN-05: Discriminated /api/me/is-super-admin Response
+**Type**: NEW (Slice 5)
+**Source**: CRITICAL gap — endpoint swallowed 401 (explore finding)
+**Statement**: `GET /api/me/is-super-admin` MUST return a discriminated response object `{ isSuperAdmin: boolean, reason: 'authorized' | 'unauthenticated' | 'forbidden' }` for every call. The three cases MUST map as follows:
+
+| Condition | `isSuperAdmin` | `reason` |
+|-----------|---|---|
+| JWT missing, invalid, or expired (server throws 401) | `false` | `'unauthenticated'` |
+| User authenticated, `is_super_admin !== true` | `false` | `'forbidden'` |
+| User authenticated, `is_super_admin === true` | `true` | `'authorized'` |
+
+The endpoint MUST NOT throw an unhandled error for the unauthenticated case; it MUST catch the 401 from `serverSupabaseUser` and return the discriminated object with HTTP 200. The `reason` field is additive and backward-compatible at the wire level.
+
+**Scenarios**:
+- **Given** a request with a missing or expired JWT reaches the endpoint **When** `serverSupabaseUser` throws a 401 **Then** the endpoint catches the error AND returns HTTP 200 with `{ isSuperAdmin: false, reason: 'unauthenticated' }`.
+- **Given** a request with a valid JWT for a user where `is_super_admin` is `false` **When** the handler checks the user record **Then** the response is HTTP 200 with `{ isSuperAdmin: false, reason: 'forbidden' }`.
+- **Given** a request with a valid JWT for a user where `is_super_admin` is `true` **When** the handler checks the user record **Then** the response is HTTP 200 with `{ isSuperAdmin: true, reason: 'authorized' }`.
+- **Given** any call to `GET /api/me/is-super-admin` **When** the response is received **Then** the response body MUST contain a `reason` field with value in `['authorized', 'unauthenticated', 'forbidden']`.
+
+### R-ADMIN-06: Admin Page Reason Handling
+**Type**: NEW (Slice 5)
+**Source**: CRITICAL gap — admin page did not handle 401 path
+**Statement**: `app/pages/admin/matches/index.vue` MUST switch on the `reason` field from the `/api/me/is-super-admin` response in its `ensureSuperAdmin()` function. The page MUST NOT treat `reason === 'unauthenticated'` as equivalent to `reason === 'forbidden'`. Silent redirect on unauthenticated is FORBIDDEN.
+
+| `reason` value | Required page behaviour |
+|---|---|
+| `'authorized'` | Continue to render normally; do nothing else |
+| `'forbidden'` | Call `navigateTo('/')` immediately |
+| `'unauthenticated'` | Call `useSessionExpired().setExpired()` and stop; do NOT call `navigateTo` |
+
+**Scenarios**:
+- **Given** the API returns `{ isSuperAdmin: true, reason: 'authorized' }` **When** `ensureSuperAdmin()` evaluates the response **Then** the page renders normally with match list and controls visible.
+- **Given** the API returns `{ isSuperAdmin: false, reason: 'forbidden' }` **When** `ensureSuperAdmin()` evaluates the response **Then** `navigateTo('/')` is called.
+- **Given** the API returns `{ isSuperAdmin: false, reason: 'unauthenticated' }` **When** `ensureSuperAdmin()` evaluates the response **Then** `useSessionExpired().setExpired()` is called AND `navigateTo` is NOT called AND the toast becomes visible.
+- **Given** the `admin/matches/index.vue` source is inspected **When** checking the `ensureSuperAdmin()` function **Then** explicit handling for all three values (`'authorized'`, `'forbidden'`, `'unauthenticated'`) MUST be present AND a fallthrough or unhandled case MUST NOT exist.
 
 ## Out of Scope
 - Admin match creation UI (super-admin uses seed file + direct DB for now).
