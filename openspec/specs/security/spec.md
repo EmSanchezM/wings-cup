@@ -79,6 +79,14 @@ Ensure every table in the public schema has RLS enabled with explicit policies f
 - R-SEC-38: After `nuxt build`, no file under `dist/_nuxt/` MUST contain the literal string `NUXT_SUPABASE_SERVICE_KEY` or any service key value.
 - R-SEC-39: `.env.example` MUST document `NUXT_SUPABASE_SERVICE_KEY` with a placeholder value and a comment warning it is server-only.
 
+### Admin Handler Authorisation and Audit Logging (slice 3 — matches-and-predictions)
+
+- R-SEC-43: In-Handler Super-Admin Authorisation. Every admin server handler MUST call `requireSuperAdmin(event)` as its first instruction. The service-role Supabase client MUST NOT be created if this check fails. Non-super-admin or unauthenticated callers MUST receive `403`. This in-handler check is the primary security boundary for admin operations because the `matches` table intentionally has no write RLS — it relies on service-role-only writes plus this in-handler gate.
+
+- R-SEC-44: Prediction RLS Policy Post-Patch Guarantees. After migration 00014 is applied, the following invariants MUST hold: (a) `pred_insert_own_before_kickoff` allows INSERT only when `auth.uid() = user_id` AND `match.kickoff_at > NOW()`; (b) `pred_update_own_unlocked` allows UPDATE only when `auth.uid() = user_id` AND `locked_at IS NULL`; (c) `pred_select_room_members` allows SELECT only to members of the prediction's room; (d) `pred_select_super_admin` allows full SELECT to super-admins.
+
+- R-SEC-45: Audit Log on Match Mutations. Every super-admin match mutation (PATCH match, lock-now) MUST write a row to `audit_log` via the service-role client after the operation succeeds. The row MUST contain: `action` (string — convention: `<resource>.<verb_past>`, resource plural), `admin_id` (super-admin's user_id), `target_id` (match id or null for lock-now), `target_type` (e.g., "match"), `before_value` (snapshot before mutation or null), `after_value` (diff/result after mutation), `created_at` (server timestamp). Action string convention examples: `matches.update`, `predictions.lock_started`. A failed mutation MUST NOT write an audit_log row.
+
 ---
 
 ## Scenarios

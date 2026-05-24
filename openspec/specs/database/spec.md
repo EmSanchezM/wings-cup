@@ -69,6 +69,10 @@ Create the full relational schema that all application slices depend on. Every t
 - R-DB-28: After running `pnpm gen-types`, `shared/types/database.types.ts` MUST be non-empty and contain type definitions for all 7 tables.
 - R-DB-29: `nuxt.config.ts` MUST reference the generated types file via `supabase: { types: './shared/types/database.types.ts' }`.
 
+### RLS Policy Patches (slice 3 — matches-and-predictions)
+
+- R-DB-32: Migration `00014_fix_pred_rls.sql` MUST patch THREE prediction RLS policies to use `(SELECT auth.uid())` instead of bare `auth.uid()`, eliminating the 42501 permission error under the Supabase JIT policy planner. The three policies are: `pred_insert_own_before_kickoff`, `pred_update_own_unlocked`, and `pred_delete_own_unlocked`. This migration MUST be forward-only, idempotent (using `DROP POLICY IF EXISTS` + `CREATE POLICY`), and executed in PR-1 of slice 3.
+
 ---
 
 ## Scenarios

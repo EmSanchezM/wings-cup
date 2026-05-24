@@ -40,7 +40,7 @@ Slice 3 stays on the Clean Architecture rails established in slice 2: pure handl
 
 **Schema correction (locked)**: the tournament-round column is `stage` (not `phase`). All schemas, types, seed columns, and admin UI MUST use `stage`. Allowed values per CHECK constraint: `group`, `round_of_16`, `quarter`, `semi`, `final`, `third_place`. `group_name` holds the group letter (`A`–`H`) and is NULL for knockout matches.
 
-**Seed strategy**: a static `supabase/seeds/matches.sql` file containing 64 INSERTs guarded by `INSERT ... ON CONFLICT (external_id) DO NOTHING`. A `pnpm seed:matches` script invokes `supabase db execute --file` against the **local** Supabase by default. No `--remote` flag — seeding cloud is a manual operation when needed.
+**Seed strategy**: a static `supabase/seeds/matches.sql` file containing 64 INSERTs guarded by `INSERT ... ON CONFLICT (external_id) DO NOTHING`. A `pnpm seed:matches` script invokes `supabase db query --linked -f` against the **linked remote Supabase**. (Note: The original proposal specified local-only via `db execute --file`, but the Supabase CLI deprecated that command; the current invocation is `db query --linked -f`.)
 
 **Leaderboard**: direct `SELECT` on `room_members` joined to `profiles.display_name`, ordered by `total_points DESC, joined_at ASC`. Uses the existing `idx_room_members_room_points` index. No view, no RPC.
 
@@ -51,7 +51,7 @@ Slice 3 stays on the Clean Architecture rails established in slice 2: pure handl
 ### 4.1 Migrations & data
 - `supabase/migrations/00014_fix_pred_rls.sql` — drop + recreate `pred_insert_own_before_kickoff` and `pred_update_own_unlocked` using `(SELECT auth.uid())`. Forward-only, idempotent.
 - `supabase/seeds/matches.sql` — 64-row fixture file. Group stage rows include `group_name` and concrete team names. Knockout rows use placeholder text (`"Group A Winner"`, `"Group A Runner-up"`, etc.) per locked decision D2.
-- `pnpm seed:matches` npm script. Local-only target (D1).
+- `pnpm seed:matches` npm script. Uses `supabase db query --linked -f` (current CLI).
 
 ### 4.2 Handlers (4)
 - `server/handlers/list-matches.ts` — public catalog read
@@ -76,7 +76,6 @@ Slice 3 stays on the Clean Architecture rails established in slice 2: pure handl
 - `shared/schemas/match.schema.ts` — admin update payload (status, home_score, away_score, optional team-name overrides)
 - `shared/schemas/prediction.schema.ts` — upsert payload (`match_id`, `predicted_home`, `predicted_away`)
 - `shared/schemas/leaderboard.schema.ts` — query shape (room_id from URL)
-- `shared/schemas/audit-entry.schema.ts` — service-role audit-write payload
 - `shared/types/matches.ts`, `shared/types/predictions.ts` — `Tables<'matches'>`-derived view types
 
 ### 4.6 Composables & client utils (2)
@@ -92,7 +91,7 @@ Slice 3 stays on the Clean Architecture rails established in slice 2: pure handl
 - `tests/nuxt/predictions.test.ts`
 
 ### 4.8 Locked constraints (decided, not optional)
-- **D1** Seed targets local only via `pnpm seed:matches`; idempotent on `external_id`.
+- **D1** Seed targets linked remote Supabase via `pnpm seed:matches`; idempotent on `external_id`.
 - **D2** Knockout placeholder strings: `"Group A Winner"`, `"Group A Runner-up"`, etc. Admin substitutes real names post-group-stage.
 - **D3** Leaderboard tie-break: `total_points DESC, joined_at ASC`.
 - **D4** "Lock Predictions Now" admin button is IN scope; invokes `lock_started_predictions()` RPC under service role.
@@ -120,7 +119,7 @@ Slice 3 stays on the Clean Architecture rails established in slice 2: pure handl
 
 | ID | Decision | Locked value |
 |----|----------|--------------|
-| D1 | Seed strategy | `pnpm seed:matches` → local Supabase only, file `supabase/seeds/matches.sql`, idempotent on `external_id` |
+| D1 | Seed strategy | `pnpm seed:matches` → linked remote Supabase, file `supabase/seeds/matches.sql`, idempotent on `external_id` |
 | D2 | Knockout placeholders | Text strings like `"Group A Winner"`, `"Group A Runner-up"` in `home_team`/`away_team`; admin edits post-group |
 | D3 | Leaderboard tie-break | `ORDER BY total_points DESC, joined_at ASC` |
 | D4 | Lock Predictions Now button | IN scope; admin matches page; calls `lock_started_predictions()` RPC under service role |

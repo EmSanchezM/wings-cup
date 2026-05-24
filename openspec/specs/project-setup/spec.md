@@ -54,6 +54,14 @@ Establish a runnable Nuxt 4.4 application with all required modules wired, ESLin
 - R-PS-22: `pnpm dev` MUST start the Nuxt dev server on localhost without errors.
 - R-PS-23: A `README.md` MUST include a "Boot from scratch" section covering: `pnpm install`, `supabase link`, `supabase db push`, `pnpm dev`, `pnpm gen-types`.
 
+### Seed Scripts and No New Runtime Dependencies (slice 3 — matches-and-predictions)
+
+- R-PS-30: `pnpm seed:matches` Script. `package.json` MUST include a script `"seed:matches": "supabase db query --linked -f supabase/seeds/matches.sql"`. Running it on a local Supabase instance MUST be idempotent — repeated executions MUST NOT fail or duplicate data (enforced by `INSERT ... ON CONFLICT (external_id) DO NOTHING` in the seed file). Note: The `--linked` flag targets the remote linked project; `db query` is the current Supabase CLI command for executing seed files.
+
+- R-PS-31: New Files Manifest. 22 new files MUST be created by slice 3 (PR-1 and PR-2 combined): migrations, schemas, types, handlers, API wrappers, composables, and pages for matches, predictions, leaderboard, and admin functionality. Existing files (`rooms/[id]/index.vue`, `package.json`) MUST NOT be overwritten except for intentional modifications documented in their respective requirements.
+
+- R-PS-32: No New Runtime Dependencies. This slice MUST NOT introduce new runtime npm dependencies. Type-only packages (`@types/*`) are permitted if needed. `package.json`'s `dependencies` field MUST be identical before and after the slice is applied (excluding lock file updates).
+
 ---
 
 ## Scenarios
