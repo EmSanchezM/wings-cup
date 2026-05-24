@@ -24,6 +24,21 @@ const router = useRouter()
 // useSupabaseCookieRedirect reads the 'sb-redirect-path' cookie set by @nuxtjs/supabase
 const cookieRedirect = useSupabaseCookieRedirect()
 
+/**
+ * Resolve the post-auth redirect target and navigate to it.
+ * Priority: ?next (via isSafeNext) → saved cookie path → /rooms
+ * R-AUTH-24 / R-INV-06, R-INV-07 / R-SEC-42
+ */
+async function resolveAndRedirect() {
+  const nextParam = route.query.next
+  if (isSafeNext(nextParam)) {
+    await router.replace(nextParam)
+    return
+  }
+  const redirectTo = cookieRedirect.pluck() ?? '/rooms'
+  await router.replace(redirectTo)
+}
+
 onMounted(async () => {
   // --- Branch 1: PKCE / OAuth ---
   const code = route.query.code as string | undefined
@@ -36,17 +51,7 @@ onMounted(async () => {
       return
     }
 
-    // R-AUTH-24 / R-INV-06: honour ?next= when it points at a join page,
-    // otherwise fall back to the saved cookie path or /rooms.
-    // isSafeNext rejects open-redirects, lowercase codes, and shape mismatches (R-INV-07 / R-SEC-42).
-    const nextParam = route.query.next
-    if (isSafeNext(nextParam)) {
-      await router.replace(nextParam)
-      return
-    }
-
-    const redirectTo = cookieRedirect.pluck() ?? '/rooms'
-    await router.replace(redirectTo)
+    await resolveAndRedirect()
     return
   }
 
@@ -66,15 +71,7 @@ onMounted(async () => {
       return
     }
 
-    // Resolve redirect in priority order: ?next → cookie → /rooms
-    const nextParam = route.query.next
-    if (isSafeNext(nextParam)) {
-      await router.replace(nextParam)
-      return
-    }
-
-    const redirectTo = cookieRedirect.pluck() ?? '/rooms'
-    await router.replace(redirectTo)
+    await resolveAndRedirect()
     return
   }
 
