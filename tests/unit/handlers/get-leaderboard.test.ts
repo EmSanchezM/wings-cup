@@ -18,11 +18,11 @@ function makeMockClient(cfg: {
   const memberEq1 = vi.fn(() => ({ eq: memberEq2 }))
   const memberSelect = vi.fn(() => ({ eq: memberEq1 }))
 
-  // leaderboard query: room_members select + eq + order
+  // leaderboard query: room_members select + eq + order(total_points DESC).order(joined_at ASC)
   const leaderboardResult = cfg.leaderboardResult ?? { data: [], error: null }
-  const orderFn = vi.fn(async () => leaderboardResult)
-  const thenOrder = vi.fn(() => ({ order: orderFn }))
-  const leaderboardEq = vi.fn(() => ({ order: orderFn }))
+  const secondOrderFn = vi.fn(async () => leaderboardResult)
+  const firstOrderFn = vi.fn(() => ({ order: secondOrderFn }))
+  const leaderboardEq = vi.fn(() => ({ order: firstOrderFn }))
   const leaderboardSelect = vi.fn(() => ({ eq: leaderboardEq }))
 
   let callCount = 0
@@ -37,7 +37,20 @@ function makeMockClient(cfg: {
   })
 
   const client = { from } as unknown as SupabaseClient<Database>
-  return { client, spies: { from, memberSelect, memberEq1, memberEq2, memberLimitFn, leaderboardSelect, leaderboardEq, orderFn } }
+  return {
+    client,
+    spies: {
+      from,
+      memberSelect,
+      memberEq1,
+      memberEq2,
+      memberLimitFn,
+      leaderboardSelect,
+      leaderboardEq,
+      firstOrderFn,
+      secondOrderFn,
+    },
+  }
 }
 
 const memberRow = { user_id: USER_ID, room_id: ROOM_ID, role: 'member', joined_at: '2026-06-01T00:00:00Z', total_points: 0 }
@@ -95,6 +108,18 @@ describe('getLeaderboardHandler (R-LEAD-01, R-LEAD-02)', () => {
     expect(result.leaderboard[1].display_name).toBe('Bob')
     expect(result.leaderboard[2].display_name).toBe('Charlie')
     expect(result.leaderboard[2].total_points).toBe(7)
+  })
+
+  it('chains .order(total_points DESC).order(joined_at ASC) for D3 tie-break (R-LEAD-02)', async () => {
+    const { client, spies } = makeMockClient({
+      membershipResult: { data: [memberRow], error: null },
+      leaderboardResult: { data: leaderboardRowsObject, error: null },
+    })
+
+    await getLeaderboardHandler({ supabase: client, userId: USER_ID, roomId: ROOM_ID })
+
+    expect(spies.firstOrderFn).toHaveBeenCalledWith('total_points', { ascending: false })
+    expect(spies.secondOrderFn).toHaveBeenCalledWith('joined_at', { ascending: true })
   })
 
   it('defensively flattens profile when returned as array', async () => {

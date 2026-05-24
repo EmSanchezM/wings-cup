@@ -33,12 +33,13 @@ export async function getLeaderboardHandler(
   if (memberErr) throw new Error(memberErr.message)
   if (!members || members.length === 0) throw new Error('not_member')
 
-  // 2. Fetch leaderboard — JOIN profiles, ORDER BY total_points DESC, joined_at ASC
+  // 2. Fetch leaderboard — JOIN profiles, ORDER BY total_points DESC, joined_at ASC (R-LEAD-02 D3)
   const { data, error } = await supabase
     .from('room_members')
     .select('user_id, total_points, joined_at, profiles!inner(display_name)')
     .eq('room_id', roomId)
     .order('total_points', { ascending: false })
+    .order('joined_at', { ascending: true })
 
   if (error) throw new Error(error.message)
 
