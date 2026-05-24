@@ -39,7 +39,9 @@ function fetchStatus(err: unknown): number | null {
 
 async function loadPreview() {
   try {
-    preview.value = await roomClient.previewByCode(code)
+    const result = await roomClient.previewByCode(code)
+    if (!result) return // 401: toast handles UX
+    preview.value = result
   }
   catch (e) {
     if (fetchStatus(e) === 404) {
@@ -59,8 +61,9 @@ async function autoJoin() {
   isJoining.value = true
   joinError.value = null
   try {
-    const { roomId } = await roomClient.joinByCode(code, { provider: 'google' })
-    await router.replace(`/rooms/${roomId}`)
+    const result = await roomClient.joinByCode(code, { provider: 'google' })
+    if (!result) return // 401: toast handles UX
+    await router.replace(`/rooms/${result.roomId}`)
   }
   catch (e) {
     joinError.value = e instanceof Error ? e.message : 'No se pudo entrar a la sala'

@@ -49,7 +49,9 @@ async function handleSubmit() {
   } catch (err) {
     const statusCode = (err as { statusCode?: number })?.statusCode
     const msg = err instanceof Error ? err.message : 'unknown_error'
-    if (statusCode === 423 || msg.includes('prediction_locked')) {
+    if (statusCode === 401) {
+      useSessionExpired().setExpired()
+    } else if (statusCode === 423 || msg.includes('prediction_locked')) {
       error.value = 'prediction_locked'
     } else if (statusCode === 409 || msg.includes('match_already_started')) {
       error.value = 'match_already_started'

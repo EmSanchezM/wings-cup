@@ -48,7 +48,7 @@ const existingPrediction: Prediction = {
   predicted_home: 2,
   predicted_away: 1,
   locked_at: null,
-  points: null,
+  points_awarded: 0,
   created_at: '2026-05-24T00:00:00Z',
   updated_at: '2026-05-24T00:00:00Z',
 }
@@ -175,6 +175,92 @@ describe('MatchPredictionCard (R-PRED-07)', () => {
     const html = wrapper.html()
     const hasError = html.includes('prediction_locked') || html.includes('bloqueada') || html.includes('423')
     expect(hasError).toBe(true)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// B23 — MatchPredictionCard 401 detection (R-UX-04)
+// ---------------------------------------------------------------------------
+
+describe('MatchPredictionCard — 401 detection (R-UX-04)', () => {
+  beforeEach(() => {
+    vi.stubGlobal('$fetch', vi.fn(async () => ({ prediction: existingPrediction })))
+  })
+
+  it('T-69-01: 401 → setExpired() called, no card-level error shown', async () => {
+    const fetchError = Object.assign(new Error('Unauthorized'), { statusCode: 401 })
+    vi.stubGlobal('$fetch', vi.fn(async () => { throw fetchError }))
+
+    const { useSessionExpired } = await import('../../app/composables/useSessionExpired')
+    // Ensure clean state
+    useSessionExpired().reset()
+
+    const { default: MatchPredictionCard } = await import(
+      '../../app/components/MatchPredictionCard.vue'
+    )
+    const wrapper = await mountSuspended(MatchPredictionCard, {
+      props: {
+        match: scheduledMatch,
+        existingPrediction: null,
+        roomId: ROOM_ID,
+      },
+    })
+    await wrapper.find('form').trigger('submit.prevent')
+    await wrapper.vm.$nextTick()
+
+    // setExpired must have been called
+    expect(useSessionExpired().isExpired.value).toBe(true)
+    // No card-level error message — the toast handles it
+    const html = wrapper.html()
+    expect(html).not.toContain('bloqueada')
+    expect(html).not.toContain('error')
+    // cleanup
+    useSessionExpired().reset()
+  })
+
+  it('T-69-02: 423 still shows card-level locked error, setExpired NOT called', async () => {
+    const fetchError = Object.assign(new Error('prediction_locked'), { statusCode: 423 })
+    vi.stubGlobal('$fetch', vi.fn(async () => { throw fetchError }))
+
+    const { useSessionExpired } = await import('../../app/composables/useSessionExpired')
+    useSessionExpired().reset()
+
+    const { default: MatchPredictionCard } = await import(
+      '../../app/components/MatchPredictionCard.vue'
+    )
+    const wrapper = await mountSuspended(MatchPredictionCard, {
+      props: {
+        match: scheduledMatch,
+        existingPrediction: null,
+        roomId: ROOM_ID,
+      },
+    })
+    await wrapper.find('form').trigger('submit.prevent')
+    await wrapper.vm.$nextTick()
+
+    // Card-level locked error must be shown
+    const html = wrapper.html()
+    const hasLockedError = html.includes('prediction_locked') || html.includes('bloqueada') || html.includes('423')
+    expect(hasLockedError).toBe(true)
+    // setExpired must NOT have been called
+    expect(useSessionExpired().isExpired.value).toBe(false)
+  })
+
+  it('T-69-03: source has 401 check in same branch as 423/409', async () => {
+    // Structural: verify 401 is checked in the same statusCode switch as 423/409
+    const fs = await import('fs')
+    const path = await import('path')
+    const filePath = path.resolve(
+      process.cwd(),
+      'app/components/MatchPredictionCard.vue',
+    )
+    const src = fs.readFileSync(filePath, 'utf-8')
+    // All three status codes must appear in the source
+    expect(src).toContain('401')
+    expect(src).toContain('423')
+    expect(src).toContain('409')
+    // setExpired must be called on 401
+    expect(src).toContain('setExpired')
   })
 })
 

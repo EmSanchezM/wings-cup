@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input'
 import { createRoomSchema } from '~~/shared/schemas/room.schema'
 import type { RoomListItem } from '~~/shared/types/rooms'
 
+// Auth enforced by @nuxtjs/supabase redirectOptions (covers /rooms/**)
 const roomClient = useRoom()
 const router = useRouter()
 
@@ -20,7 +21,9 @@ async function loadRooms() {
   isLoading.value = true
   error.value = null
   try {
-    rooms.value = await roomClient.listRooms()
+    const result = await roomClient.listRooms()
+    if (!result) return // 401: toast handles UX
+    rooms.value = result
   }
   catch (e) {
     error.value = e instanceof Error ? e.message : 'No se pudieron cargar las salas'
@@ -44,6 +47,7 @@ async function handleCreate() {
   error.value = null
   try {
     const room = await roomClient.createRoom(parsed.data)
+    if (!room) return // 401: toast handles UX
     await router.push(`/rooms/${room.id}`)
   }
   catch (e) {
