@@ -5,8 +5,7 @@ import { useLeaderboard } from '~/composables/useLeaderboard'
 const route = useRoute()
 const roomId = route.params.id as string
 
-// Auth is enforced by @nuxtjs/supabase redirectOptions (covers /rooms/**).
-// No manual useSupabaseUser guard needed here.
+// Auth enforced by @nuxtjs/supabase redirectOptions — covers /rooms/** routes.
 const { data: leaderboard, pending, error, load } = useLeaderboard(roomId)
 
 onMounted(() => load())
