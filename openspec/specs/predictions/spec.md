@@ -63,29 +63,44 @@ New capability. Full spec for the prediction lifecycle: room-scoped upsert, kick
 - **Given** user B is not a member of room R **When** user B calls `POST /api/rooms/R/predictions` **Then** the handler returns `403` before reaching the upsert logic.
 
 ### R-PRED-06: Match Selector Card List Page
-**Type**: ADDED
-**Source**: W-03 (predictions-ux-and-guards, Slice 4)
+**Type**: MODIFIED
+**Source**: W-03 (predictions-ux-and-guards, Slice 4) + Proposal §3.4 (realtime-match-and-leaderboard, Slice 6)
+**(Previously: filter restricted to `status === 'scheduled'` AND `kickoff_at > now`. New: filter is `status ∈ ['scheduled', 'live', 'finished']`; the `kickoff_at > now` client-side time check is removed because the server-side kickoff gate in `upsert-prediction` handler remains the authoritative guard. The local variable `scheduledEntries` MUST be renamed to `eligibleEntries`.)**
 
-The `rooms/[id]/predictions.vue` page MUST load all matches from `useMatches()` and filter client-side to those with `status === 'scheduled'`. It MUST also load the user's existing predictions for the room via `predClient.getPredictions(roomId)`. Both fetches MUST be initiated in parallel on `onMounted`. The page MUST join the two arrays client-side by `match_id` and render one `<MatchPredictionCard>` per resulting entry. When the filtered+joined array is empty the page MUST render the empty-state message "No hay partidos disponibles para pronosticar" and a navigation link to the room leaderboard — it MUST NOT redirect automatically. Per-card error responses (HTTP 423, 409) MUST be displayed inline on the corresponding card and MUST NOT surface as a global page-level error. The page MUST NOT contain any `useSupabaseUser` import; authentication is guaranteed by the module-level `redirectOptions`.
+The `rooms/[id]/predictions.vue` page MUST load all matches from `useMatches()` and filter client-side to those with `status ∈ ['scheduled', 'live', 'finished']`, stored in a computed ref named `eligibleEntries`. It MUST also load the user's existing predictions for the room via `predClient.getPredictions(roomId)`. Both fetches MUST be initiated in parallel on `onMounted`. The page MUST join the two arrays client-side by `match_id` and render one `<MatchPredictionCard>` per resulting entry. When `eligibleEntries` is empty the page MUST render the empty-state message "No hay partidos disponibles para pronosticar" and a navigation link to the room leaderboard — it MUST NOT redirect automatically. Per-card error responses (HTTP 423, 409) MUST be displayed inline on the corresponding card and MUST NOT surface as a global page-level error. The page MUST NOT contain any `useSupabaseUser` import; authentication is guaranteed by the module-level `redirectOptions`.
 
 **Scenarios**:
 - **Given** the room has matches with `status === 'scheduled'` and the user is authenticated **When** `rooms/[id]/predictions.vue` mounts **Then** one `<MatchPredictionCard>` is rendered per scheduled match, showing home team, away team, kickoff datetime (locale-formatted), and stage
+- **Given** the room has matches with `status === 'live'` or `status === 'finished'` **When** the page computes `eligibleEntries` **Then** cards are rendered for those matches AND the cards display in read-only mode (per R-PRED-07)
 - **Given** the user has an existing unlocked prediction for match M in room R **When** the page finishes loading and joining data **Then** the card for M has `predictedHome` and `predictedAway` inputs pre-filled with the saved values
-- **Given** there are zero matches with `status === 'scheduled'` visible to the page **When** the page finishes loading **Then** the empty-state message "No hay partidos disponibles para pronosticar" is visible AND a link to the room leaderboard is rendered AND no automatic navigation occurs
-- **Given** the match list includes matches with `status` of `finished`, `in_progress`, or `postponed` **When** the page applies the client-side filter **Then** no card is rendered for those matches
+- **Given** there are zero matches with `status ∈ ['scheduled', 'live', 'finished']` visible to the page **When** the page finishes loading **Then** the empty-state message "No hay partidos disponibles para pronosticar" is visible AND a link to the room leaderboard is rendered AND no automatic navigation occurs
+- **Given** the match list includes matches with `status` of `postponed` or `cancelled` **When** the page applies the client-side filter via `eligibleEntries` **Then** no card is rendered for those matches
+- **Given** a match card is visible with `status: 'scheduled'` **When** a realtime UPDATE payload changes the match `status` to `'finished'` **Then** the card remains visible in the list (not removed by the filter) AND the card renders in read-only mode
 - **Given** the user submits a prediction for a match whose prediction has `locked_at IS NOT NULL` **When** the server returns HTTP 423 **Then** the error is displayed on that specific card only AND all other cards remain in their current state, unaffected
 - **Given** the user submits a prediction for a match whose `kickoff_at <= now()` **When** the server returns HTTP 409 `{ error: "match_already_started" }` **Then** the error is displayed on that specific card only AND all other cards remain in their current state
 
 ### R-PRED-07: MatchPredictionCard Component Contract
-**Type**: ADDED
-**Source**: W-03 (predictions-ux-and-guards, Slice 4)
+**Type**: MODIFIED
+**Source**: W-03 (predictions-ux-and-guards, Slice 4) + Proposal §3.5 (realtime-match-and-leaderboard, Slice 6)
+**(Previously: read-only mode driven solely by `existingPrediction.locked_at`. New: a second independent read-only mode is added for `match.status !== 'scheduled'`. Additionally, when `match.status === 'finished'`, the card MUST display the final score. The `locked_at`-based lock badge remains independent.)**
 
-`app/components/MatchPredictionCard.vue` MUST accept two props: `match: MatchListItem` and `existingPrediction: Prediction | null`. It MUST own its local reactive state for `predictedHome`, `predictedAway`, `submitting`, and `error`. It MUST emit a `submitted` event after a successful upsert call. When `existingPrediction.locked_at` is not null the component MUST render score inputs as `readonly` and MUST display a lock badge. The component MUST call `predClient.upsertPrediction(roomId, { match_id, predicted_home, predicted_away })` on submit and MUST NOT accept `locked_at` in the payload.
+`app/components/MatchPredictionCard.vue` MUST accept two props: `match: MatchListItem` and `existingPrediction: Prediction | null`. It MUST own its local reactive state for `predictedHome`, `predictedAway`, `submitting`, and `error`. It MUST emit a `submitted` event after a successful upsert call.
+
+**Status-based read-only mode**: A computed `isReadonly` MUST be `true` when `match.status !== 'scheduled'`. When `isReadonly` is `true`, score inputs MUST be `readonly` and the submit button MUST NOT be rendered.
+
+**Lock-based read-only mode**: When `existingPrediction.locked_at` is not null, the component MUST render score inputs as `readonly` and MUST display a lock badge. This behaviour is INDEPENDENT of `isReadonly` — both conditions can be true simultaneously.
+
+**Final score display**: When `match.status === 'finished'`, the card MUST render a final score block showing `{match.home_score} - {match.away_score}` below the prediction inputs.
+
+The component MUST call `predClient.upsertPrediction(roomId, { match_id, predicted_home, predicted_away })` on submit and MUST NOT accept `locked_at` in the payload.
 
 **Scenarios**:
 - **Given** `match.status === 'scheduled'` and `existingPrediction.locked_at === null` **When** the user sets scores and clicks submit **Then** `upsertPrediction` is called with `{ match_id: match.id, predicted_home, predicted_away }` AND the `submitted` event is emitted on success AND the card shows a success badge briefly
 - **Given** `existingPrediction.locked_at` is not null **When** the card renders **Then** both score inputs have `readonly` attribute AND a lock badge is visible AND no submit button is active
-- **Given** the user clicks submit **When** the upsert call is in flight **Then** `submitting` is true and the submit button is disabled
+- **Given** `match.status === 'live'` and `existingPrediction.locked_at === null` **When** the card renders **Then** `isReadonly` is `true` AND score inputs have `readonly` attribute AND the submit button is NOT rendered AND no lock badge is displayed (lock badge is driven by `locked_at`, not status)
+- **Given** `match.status === 'finished'` and `match.home_score = 2`, `match.away_score = 1` **When** the card renders **Then** `isReadonly` is `true` AND score inputs have `readonly` attribute AND the submit button is NOT rendered AND a final score block displaying "2 - 1" is visible below the inputs
+- **Given** the card was rendered with `match.status === 'scheduled'` (submit button visible) **When** the `match` prop is updated to `{ status: 'finished', home_score: 3, away_score: 0 }` **Then** the submit button disappears AND the final score block "3 - 0" becomes visible AND score inputs become `readonly`
+- **Given** `match.status === 'scheduled'` and the user clicks submit **When** the upsert call is in flight **Then** `submitting` is true and the submit button is disabled
 - **Given** `upsertPrediction` rejects or returns an error status **When** the error is received **Then** `error` is set to the error message AND the error is rendered on the card AND `submitting` is false
 - **Given** `existingPrediction` is non-null and has `predicted_home: 2, predicted_away: 1` **When** the card initialises its local state **Then** `predictedHome` is initialised to 2 and `predictedAway` to 1
 

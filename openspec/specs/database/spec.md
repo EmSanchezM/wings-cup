@@ -73,6 +73,10 @@ Create the full relational schema that all application slices depend on. Every t
 
 - R-DB-32: Migration `00014_fix_pred_rls.sql` MUST patch THREE prediction RLS policies to use `(SELECT auth.uid())` instead of bare `auth.uid()`, eliminating the 42501 permission error under the Supabase JIT policy planner. The three policies are: `pred_insert_own_before_kickoff`, `pred_update_own_unlocked`, and `pred_delete_own_unlocked`. This migration MUST be forward-only, idempotent (using `DROP POLICY IF EXISTS` + `CREATE POLICY`), and executed in PR-1 of slice 3.
 
+### Realtime Publication (slice 6 — realtime-match-and-leaderboard)
+
+- R-DB-33: Migration `00015_realtime_publication.sql` MUST exist in `supabase/migrations/`. It MUST execute `ALTER PUBLICATION supabase_realtime ADD TABLE matches` and `ALTER PUBLICATION supabase_realtime ADD TABLE room_members`. Both statements MUST be idempotent — guarded via `pg_publication_tables` check so that a second application of the migration produces no error. Migration MUST be forward-only; no corresponding `down` migration is required. Migration MUST be applied to the linked Supabase project via `supabase db push` before the application code changes are merged; without it, zero realtime events will fire from either table. (See `realtime` domain spec R-RT-01 for full scenarios.)
+
 ---
 
 ## Scenarios

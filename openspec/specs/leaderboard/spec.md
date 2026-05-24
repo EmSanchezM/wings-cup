@@ -34,20 +34,24 @@ New capability. Full spec for per-room standings: SELECT-based query, tie-break 
 - **Given** a component uses `useLeaderboard(roomId)` **When** the composable mounts **Then** it calls `GET /api/rooms/{roomId}/leaderboard` and exposes `data`, `pending`, and `error` reactive refs.
 - **Given** the leaderboard API returns a network error **When** `useLeaderboard` handles the response **Then** `error` is set and `data` remains empty, preventing a render crash.
 
-### R-LEAD-04: Leaderboard Page Auth Guard
+### R-LEAD-04: Leaderboard Page Auth Guard and Realtime Reorder
 **Type**: MODIFIED
-**Source**: S-02 (predictions-ux-and-guards, Slice 4)
-(Previously: NEW — "Page MUST be protected, unauthenticated users redirected to `/login`")
+**Source**: S-02 (predictions-ux-and-guards, Slice 4) + Proposal §3.6 (realtime-match-and-leaderboard, Slice 6)
+**(Previously: R-LEAD-04 covered page navigation link and unauthenticated redirect. Extended in slice 4 with auth delegation to `redirectOptions`. Now extended with realtime reorder requirement: page MUST subscribe to `room_members` UPDATEs and reorder within 2 seconds without page refresh.)**
 
-`app/pages/rooms/[id]/leaderboard.vue` MUST NOT contain a `useSupabaseUser()` import or any `onMounted` redirect block that checks `user.value`. Authentication enforcement MUST be delegated exclusively to the `@nuxtjs/supabase` module's `redirectOptions.include` list which already covers `/rooms(/*)` routes in `nuxt.config.ts`. The `load()` call from `useLeaderboard()` MUST be invoked inside a plain `onMounted(() => load())`. Stale-session failures (401 from the leaderboard API) MUST surface via the `useLeaderboard().error` ref — they MUST NOT be swallowed silently and MUST NOT trigger a manual `navigateTo` redirect from the page component.
+`app/pages/rooms/[id]/leaderboard.vue` MUST be linked from `rooms/[id]/index.vue`. The page MUST redirect unauthenticated users to `/login`. The page MUST subscribe to `room_members` UPDATE events via `useLeaderboard(roomId).subscribe(onUpdate)` in `onMounted` and invoke the returned cleanup function in `onUnmounted`. When an UPDATE payload arrives for any member of the current room, the page MUST update that member's `total_points` in the local standings array and immediately re-sort using the comparator `(a, b) => b.total_points - a.total_points || a.joined_at.localeCompare(b.joined_at)` — matching the server-side `get-leaderboard.ts` order (`total_points DESC, joined_at ASC`). The re-sort MUST complete and be reflected in the DOM within 2 seconds of the realtime event arriving.
+
+Authentication enforcement MUST be delegated exclusively to the `@nuxtjs/supabase` module's `redirectOptions.include` list which already covers `/rooms(/*)` routes in `nuxt.config.ts`. The `load()` call from `useLeaderboard()` MUST be invoked inside a plain `onMounted(() => load())`. Stale-session failures (401 from the leaderboard API) MUST surface via the `useLeaderboard().error` ref — they MUST NOT be swallowed silently and MUST NOT trigger a manual `navigateTo` redirect from the page component.
 
 **Scenarios**:
+- **Given** authenticated member views `rooms/[id]/index.vue` **When** the page renders **Then** a link or button to the leaderboard is visible
 - **Given** a user is not authenticated (no valid session cookie) **When** they navigate to `rooms/[id]/leaderboard` **Then** the `@nuxtjs/supabase` middleware intercepts the navigation AND the user is redirected to the configured login route AND the leaderboard page component is never mounted
 - **Given** the `leaderboard.vue` source file is inspected **When** checking for `useSupabaseUser` imports or `navigateTo('/login')` calls inside `onMounted` **Then** neither is present
 - **Given** the user is authenticated and navigates to `rooms/[id]/leaderboard` **When** the page component mounts **Then** `onMounted(() => load())` fires immediately AND leaderboard data is fetched from the API
+- **Given** the leaderboard page is open with standings `[A:10pts, B:7pts]` and a realtime subscription is active **When** a `room_members` UPDATE event arrives with `{ new: { user_id: B, total_points: 12 } }` **Then** the standings reorder to `[B:12pts, A:10pts]` within 2 seconds AND no page refresh occurs
+- **Given** two members A (joined T1) and B (joined T2, T2 > T1) both reach 10 points after a realtime update **When** the client-side comparator is applied **Then** A (earlier `joined_at`) is ranked above B AND this matches the server-side `get-leaderboard.ts` sort order
 - **Given** the user's JWT has expired mid-session **When** the page is already mounted and `load()` calls the leaderboard API **Then** the API returns 401 AND `useLeaderboard().error` is set to the error value AND no automatic `navigateTo` redirect is triggered from the page component
 
 ## Out of Scope
-- Real-time leaderboard updates (deferred to a future slice).
 - Historical leaderboard snapshots (deferred).
 - Cross-room global ranking (deferred).
