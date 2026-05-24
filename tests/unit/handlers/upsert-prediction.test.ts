@@ -84,8 +84,16 @@ describe('upsertPredictionHandler (R-PRED-01, R-PRED-02, R-PRED-03, R-PRED-05)',
     expect(result.prediction).toEqual(predictionRow)
   })
 
-  it('returns 200 (update) when prediction already exists', async () => {
-    const existingPrediction = { ...predictionRow, id: 'dddddddd-dddd-4ddd-8ddd-dddddddddddd' }
+  it('returns 200 (update) when prediction already exists (updated_at > created_at)', async () => {
+    // Simulates a row that was previously inserted and is being updated now:
+    // the predictions_set_updated_at BEFORE UPDATE trigger bumped updated_at
+    // past created_at, so the handler can detect "this was an update".
+    const existingPrediction = {
+      ...predictionRow,
+      id: 'dddddddd-dddd-4ddd-8ddd-dddddddddddd',
+      created_at: '2026-06-01T00:00:00Z',
+      updated_at: '2026-06-02T00:00:00Z',
+    }
     const { client } = makeClient({
       membershipResult: { data: [memberRow], error: null },
       matchResult: { data: { kickoff_at: FUTURE_KICKOFF }, error: null },
@@ -97,7 +105,6 @@ describe('upsertPredictionHandler (R-PRED-01, R-PRED-02, R-PRED-03, R-PRED-05)',
       userId: USER_ID,
       roomId: ROOM_ID,
       input: { match_id: MATCH_ID, predicted_home: 3, predicted_away: 0 },
-      isUpdate: true,
     })
 
     expect(result.status).toBe(200)

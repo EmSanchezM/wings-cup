@@ -14,8 +14,6 @@ export interface UpsertPredictionDeps {
   userId: string
   roomId: string
   input: UpsertPredictionInput
-  /** Pass true when the caller knows it's an update (e.g. existing prediction found). */
-  isUpdate?: boolean
 }
 
 export async function upsertPredictionHandler(
@@ -68,6 +66,8 @@ export async function upsertPredictionHandler(
     throw new Error(upsertErr.message)
   }
 
-  const status = deps.isUpdate ? 200 : 201
+  // INSERT: created_at == updated_at (both DEFAULT NOW() in the same transaction).
+  // UPDATE: predictions_set_updated_at BEFORE UPDATE trigger bumps updated_at past created_at.
+  const status = prediction.created_at === prediction.updated_at ? 201 : 200
   return { status, prediction: prediction as Prediction }
 }
