@@ -17,8 +17,10 @@ export function applyMemberUpdate(
   if (!upd?.user_id) return prev
   const idx = prev.findIndex((e) => e.user_id === upd.user_id)
   if (idx === -1) return prev
+  const existing = prev[idx]!
   const merged: LeaderboardEntry = {
-    ...prev[idx],
+    user_id: existing.user_id,
+    display_name: existing.display_name,
     total_points: upd.total_points,
     joined_at: upd.joined_at,
   }
