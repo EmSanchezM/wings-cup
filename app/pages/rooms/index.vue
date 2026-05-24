@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input'
 import { createRoomSchema } from '~~/shared/schemas/room.schema'
 import type { RoomListItem } from '~~/shared/types/rooms'
 
+// Auth enforced by @nuxtjs/supabase redirectOptions (covers /rooms/**)
 const roomClient = useRoom()
 const router = useRouter()
 

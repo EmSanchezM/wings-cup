@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import type { Room, RoomMember } from '~~/shared/types/rooms'
 
+// Auth enforced by @nuxtjs/supabase redirectOptions (covers /rooms/**)
 const route = useRoute()
 const roomClient = useRoom()
 const roomId = route.params.id as string
