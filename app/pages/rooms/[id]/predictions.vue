@@ -9,7 +9,7 @@ import type { Prediction } from '~~/shared/types/predictions'
 const route = useRoute()
 const roomId = route.params.id as string
 
-const { data: allMatches, load: loadMatches } = useMatches()
+const { data: allMatches, load: loadMatches, subscribe } = useMatches()
 const predClient = makePredictionClient($fetch)
 
 const predictionsMap = ref<Map<string, Prediction>>(new Map())
@@ -60,8 +60,8 @@ onMounted(async () => {
     isLoading.value = false
   }
 
-  // Subscribe to realtime match updates
-  const { subscribe } = useMatches()
+  // Subscribe to realtime match updates — reuse the same useMatches() instance
+  // so reconnect reload flows back into allMatches (not a discarded second instance).
   cleanup.value = subscribe(onMatchUpdate)
 })
 
