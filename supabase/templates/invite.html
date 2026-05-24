@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<!--
+  Wings Cup — Invite email template
+  Available template variables (Supabase Auth):
+    {{ .SiteURL }}   — the project Site URL (configured in Supabase Dashboard per environment)
+    {{ .TokenHash }} — signed token for verifyOtp({ token_hash, type: 'invite' })
+    {{ .Email }}     — the invited user's email address
+-->
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Te invitaron a Wings Cup" />
+  <title>Invitación a Wings Cup</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f4f4f5;font-family:Arial,Helvetica,sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f5;padding:32px 16px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background-color:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.08);">
+
+          <!-- Header -->
+          <tr>
+            <td style="background-color:#1a1a2e;padding:24px 32px;">
+              <p style="margin:0;color:#ffffff;font-size:22px;font-weight:700;letter-spacing:-0.5px;">
+                Wings Cup
+              </p>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="padding:32px;">
+              <p style="margin:0 0 16px;font-size:16px;color:#111827;font-weight:600;">
+                Hola, te invitaron a Wings Cup
+              </p>
+              <p style="margin:0 0 24px;font-size:14px;color:#6b7280;line-height:1.6;">
+                Un administrador te invitó a unirte a Wings Cup — la plataforma de pronósticos
+                de la copa. Hacé clic en el botón para activar tu cuenta y empezar a jugar.
+              </p>
+
+              <!-- CTA button -->
+              <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto 24px;">
+                <tr>
+                  <td style="background-color:#4f46e5;border-radius:6px;">
+                    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=invite"
+                       style="display:inline-block;padding:12px 28px;color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;border-radius:6px;">
+                      Aceptar invitación
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin:0 0 8px;font-size:12px;color:#9ca3af;">
+                Si el botón no funciona, copiá y pegá este enlace en tu navegador:
+              </p>
+              <p style="margin:0;font-size:12px;color:#6b7280;word-break:break-all;">
+                <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=invite"
+                   style="color:#4f46e5;text-decoration:underline;">
+                  {{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=invite
+                </a>
+              </p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding:16px 32px;border-top:1px solid #f3f4f6;">
+              <p style="margin:0;font-size:11px;color:#9ca3af;text-align:center;">
+                Este correo fue enviado a {{ .Email }}. Si no esperabas esta invitación, podés ignorarlo.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
