@@ -43,6 +43,25 @@ const mockSupabaseClient = {
   removeChannel: mockRemoveChannel,
 }
 
+// Mock useMatches to avoid useSupabaseClient() being called in the nuxt test env.
+// The unit tests (use-matches-realtime.test.ts / leaderboard-matches-reload.test.ts)
+// cover subscribe behavior in depth; here we just need a no-op stub.
+vi.mock('~/composables/useMatches', async (importOriginal) => {
+  const actual = await importOriginal<Record<string, unknown>>()
+  return {
+    ...actual,
+    useMatches: () => ({
+      data: { value: [] },
+      pending: { value: false },
+      error: { value: null },
+      load: vi.fn(),
+      subscribe: vi.fn(() => vi.fn()), // returns cleanup no-op
+      updateMatch: vi.fn(),
+      lockNow: vi.fn(),
+    }),
+  }
+})
+
 // Mock useLeaderboard to return a controlled subscribe fn in the nuxt test env.
 // The unit tests (use-leaderboard-realtime.test.ts) cover subscribe behavior in depth.
 // Here we just verify structural wiring + that the page renders without crash.
@@ -139,5 +158,41 @@ describe('leaderboard.vue — subscribe lifecycle and re-sort (R-RT-05, R-LEAD-0
     )
     const wrapper = await mountSuspended(LeaderboardPage)
     expect(wrapper.element).toBeDefined()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// T-100: [RED] matches-driven reload structural assertions (B38 / R-RT-06)
+// ---------------------------------------------------------------------------
+
+describe('leaderboard.vue — matches-driven reload wiring (R-LEAD-04, R-RT-06)', () => {
+  it('T-100-01: leaderboard.vue source contains useMatches or subscribeMatches reference', async () => {
+    const fs = await import('fs')
+    const path = await import('path')
+    const src = fs.readFileSync(
+      path.resolve(process.cwd(), 'app/pages/rooms/[id]/leaderboard.vue'),
+      'utf-8',
+    )
+    expect(src).toMatch(/useMatches|subscribeMatches/)
+  })
+
+  it('T-100-02: leaderboard.vue source contains the channel name "matches-leaderboard-reload"', async () => {
+    const fs = await import('fs')
+    const path = await import('path')
+    const src = fs.readFileSync(
+      path.resolve(process.cwd(), 'app/pages/rooms/[id]/leaderboard.vue'),
+      'utf-8',
+    )
+    expect(src).toContain('matches-leaderboard-reload')
+  })
+
+  it('T-100-03: leaderboard.vue source contains onMatchUpdate handler', async () => {
+    const fs = await import('fs')
+    const path = await import('path')
+    const src = fs.readFileSync(
+      path.resolve(process.cwd(), 'app/pages/rooms/[id]/leaderboard.vue'),
+      'utf-8',
+    )
+    expect(src).toContain('onMatchUpdate')
   })
 })

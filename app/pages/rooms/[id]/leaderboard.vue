@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useLeaderboard, applyMemberUpdate } from '~/composables/useLeaderboard'
+import { useMatches } from '~/composables/useMatches'
 import type { RoomMember } from '~~/shared/types/rooms'
+import type { MatchListItem } from '~~/shared/types/matches'
 
 const route = useRoute()
 const roomId = route.params.id as string
@@ -9,20 +11,43 @@ const roomId = route.params.id as string
 // Auth enforced by @nuxtjs/supabase redirectOptions — covers /rooms/** routes.
 const { data: leaderboard, pending, error, load, subscribe } = useLeaderboard(roomId)
 
-// Subscription cleanup ref — D9 pattern
+// Secondary reload path — R-RT-06 / R-LEAD-04 (matches-driven)
+const { subscribe: subscribeMatches } = useMatches()
+
+// Subscription cleanup refs — D9 pattern
 const cleanup = ref<(() => void) | null>(null)
+let matchesCleanup: (() => void) | null = null
+let matchReloadTimer: ReturnType<typeof setTimeout> | null = null
 
 // Realtime reducer — R-RT-05 / design D5b, D5c
 function onMemberUpdate(payload: { new: RoomMember }) {
   leaderboard.value = applyMemberUpdate(leaderboard.value, payload)
 }
 
+// Matches-driven leaderboard reload — R-RT-06 / R-LEAD-04 scenarios 5–7
+// Fires only when a match transitions to 'finished'; all other statuses are ignored.
+function onMatchUpdate(payload: { new: MatchListItem }) {
+  if (payload.new.status !== 'finished') return
+  if (matchReloadTimer) clearTimeout(matchReloadTimer)
+  matchReloadTimer = setTimeout(() => {
+    void load()
+    matchReloadTimer = null
+  }, 300)
+}
+
 onMounted(() => {
   void load()
   cleanup.value = subscribe(onMemberUpdate)
+  matchesCleanup = subscribeMatches(onMatchUpdate, 'matches-leaderboard-reload')
 })
 
 onUnmounted(() => {
+  if (matchReloadTimer) {
+    clearTimeout(matchReloadTimer)
+    matchReloadTimer = null
+  }
+  matchesCleanup?.()
+  matchesCleanup = null
   cleanup.value?.()
   cleanup.value = null
 })
