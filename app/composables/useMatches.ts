@@ -49,13 +49,16 @@ export function useMatches() {
 
   type RealtimePayload = { new: MatchListItem }
 
-  function subscribe(onUpdate: (payload: RealtimePayload) => void): () => void {
+  function subscribe(
+    onUpdate: (payload: RealtimePayload) => void,
+    channelName: string = 'matches-updates',
+  ): () => void {
     const supabase = useSupabaseClient()
     let seenSubscribed = false
     let reloadTimer: ReturnType<typeof setTimeout> | null = null
 
     const channel = supabase
-      .channel('matches-updates')
+      .channel(channelName)
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'matches' },
