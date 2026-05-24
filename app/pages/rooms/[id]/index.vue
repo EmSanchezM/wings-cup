@@ -15,6 +15,7 @@ const error = ref<string | null>(null)
 onMounted(async () => {
   try {
     const result = await roomClient.getRoom(roomId)
+    if (!result) return // 401: toast handles UX
     room.value = result.room
     members.value = result.members
   }
