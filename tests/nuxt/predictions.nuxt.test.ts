@@ -283,26 +283,30 @@ describe('predictions.vue page — card list redesign (R-PRED-06)', () => {
     )
   })
 
-  it('T-50-01: renders one MatchPredictionCard per scheduled match', async () => {
+  it('T-50-01: renders cards for scheduled AND finished eligible matches', async () => {
     const { default: PredictionsPage } = await import(
       '../../app/pages/rooms/[id]/predictions.vue'
     )
     const wrapper = await mountSuspended(PredictionsPage)
     await flushPromises()
-    // Should have exactly 1 card (only scheduledMatch passes filter)
+    // scheduledMatch + finishedMatch both pass the eligibleEntries filter (slice 6)
     const cards = wrapper.findAll('[data-testid="prediction-card"]')
-    expect(cards).toHaveLength(1)
+    expect(cards).toHaveLength(2)
   })
 
-  it('T-50-02: non-scheduled matches are excluded from card list', async () => {
+  it('T-50-02: postponed matches are excluded from card list', async () => {
+    const postponedMatch: MatchListItem = {
+      ...scheduledMatch,
+      id: '55555555-5555-4555-8555-555555555555',
+      status: 'postponed',
+    }
     vi.stubGlobal(
       '$fetch',
       vi.fn(async (url: string) => {
         if (typeof url === 'string' && url.includes('/predictions')) {
           return { predictions: [] }
         }
-        // Only finished matches — match-client destructures { matches }
-        return { matches: [finishedMatch] }
+        return { matches: [postponedMatch] }
       }),
     )
     const { default: PredictionsPage } = await import(
