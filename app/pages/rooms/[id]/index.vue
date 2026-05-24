@@ -82,13 +82,24 @@ onMounted(async () => {
           </ul>
         </section>
 
-        <section class="space-y-2 rounded-lg border border-dashed p-4">
+        <section class="space-y-3 rounded-lg border p-4">
           <h2 class="text-sm font-semibold">
-            Predicciones
+            Acciones
           </h2>
-          <p class="text-sm text-muted-foreground">
-            Próximamente — disponible en la siguiente entrega.
-          </p>
+          <div class="flex flex-col gap-2 sm:flex-row">
+            <NuxtLink
+              :to="`/rooms/${roomId}/predictions`"
+              class="rounded-md border px-4 py-2 text-sm font-medium hover:bg-muted transition-colors text-center"
+            >
+              Mis Predicciones
+            </NuxtLink>
+            <NuxtLink
+              :to="`/rooms/${roomId}/leaderboard`"
+              class="rounded-md border px-4 py-2 text-sm font-medium hover:bg-muted transition-colors text-center"
+            >
+              Tabla de Posiciones
+            </NuxtLink>
+          </div>
         </section>
       </template>
     </div>
