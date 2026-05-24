@@ -23,18 +23,22 @@ const lockingNow = ref(false)
 const lockedCount = ref<number | null>(null)
 
 async function ensureSuperAdmin() {
-  try {
-    const { isSuperAdmin } = await $fetch<{ isSuperAdmin: boolean }>(
-      '/api/me/is-super-admin',
-    )
-    if (!isSuperAdmin) {
+  const { isSuperAdmin, reason } = await $fetch<{
+    isSuperAdmin: boolean
+    reason: 'authorized' | 'forbidden' | 'unauthenticated'
+  }>('/api/me/is-super-admin')
+
+  switch (reason) {
+    case 'authorized':
+      isAuthorised.value = true
+      await matchesState.load()
+      break
+    case 'forbidden':
       await router.replace('/')
-      return
-    }
-    isAuthorised.value = true
-    await matchesState.load()
-  } catch {
-    await router.replace('/')
+      break
+    case 'unauthenticated':
+      useSessionExpired().setExpired()
+      break
   }
 }
 
@@ -83,6 +87,9 @@ async function handleLockNow() {
 onMounted(async () => {
   try {
     await ensureSuperAdmin()
+  } catch {
+    // Network or unexpected error: fail safe by redirecting to root
+    await router.replace('/')
   } finally {
     checkingAuth.value = false
   }
