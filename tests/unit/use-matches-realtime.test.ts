@@ -204,4 +204,22 @@ describe('useMatches.subscribe (R-RT-02)', () => {
     await Promise.resolve()
     expect(mockFetch).not.toHaveBeenCalled()
   })
+
+  // -------------------------------------------------------------------------
+  // T-97: [RED] optional channelName param — B37 / R-RT-02 (MODIFIED)
+  // -------------------------------------------------------------------------
+
+  it('T-97-01: subscribe(onUpdate) with no second arg → channel("matches-updates") called', async () => {
+    const { useMatches } = await import('../../app/composables/useMatches')
+    const { subscribe } = useMatches()
+    subscribe(vi.fn())
+    expect(mockClient.channel).toHaveBeenCalledWith('matches-updates')
+  })
+
+  it('T-97-02: subscribe(onUpdate, "matches-leaderboard-reload") → channel("matches-leaderboard-reload") called', async () => {
+    const { useMatches } = await import('../../app/composables/useMatches')
+    const { subscribe } = useMatches()
+    subscribe(vi.fn(), 'matches-leaderboard-reload')
+    expect(mockClient.channel).toHaveBeenCalledWith('matches-leaderboard-reload')
+  })
 })
