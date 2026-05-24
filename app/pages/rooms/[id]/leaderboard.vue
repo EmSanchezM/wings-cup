@@ -1,14 +1,31 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
-import { useLeaderboard } from '~/composables/useLeaderboard'
+import { ref, onMounted, onUnmounted } from 'vue'
+import { useLeaderboard, applyMemberUpdate } from '~/composables/useLeaderboard'
+import type { RoomMember } from '~~/shared/types/rooms'
 
 const route = useRoute()
 const roomId = route.params.id as string
 
 // Auth enforced by @nuxtjs/supabase redirectOptions — covers /rooms/** routes.
-const { data: leaderboard, pending, error, load } = useLeaderboard(roomId)
+const { data: leaderboard, pending, error, load, subscribe } = useLeaderboard(roomId)
 
-onMounted(() => load())
+// Subscription cleanup ref — D9 pattern
+const cleanup = ref<(() => void) | null>(null)
+
+// Realtime reducer — R-RT-05 / design D5b, D5c
+function onMemberUpdate(payload: { new: RoomMember }) {
+  leaderboard.value = applyMemberUpdate(leaderboard.value, payload)
+}
+
+onMounted(() => {
+  void load()
+  cleanup.value = subscribe(onMemberUpdate)
+})
+
+onUnmounted(() => {
+  cleanup.value?.()
+  cleanup.value = null
+})
 </script>
 
 <template>

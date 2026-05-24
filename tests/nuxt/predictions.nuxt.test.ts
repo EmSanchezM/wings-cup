@@ -73,6 +73,38 @@ vi.mock('#app', async (importOriginal) => {
 })
 
 // ---------------------------------------------------------------------------
+// Mock useMatches subscribe — in the nuxt test env, useSupabaseClient cannot
+// initialize (no SUPABASE_URL/KEY). We mock useMatches to return a no-op
+// subscribe so predictions.vue onMounted doesn't throw unhandled rejections.
+// The subscribe behavior is fully tested in unit tests.
+// ---------------------------------------------------------------------------
+
+vi.mock('~/composables/useMatches', async (importOriginal) => {
+  const actual = await importOriginal<Record<string, unknown>>()
+  const { applyMatchUpdate } = actual as { applyMatchUpdate: (...args: unknown[]) => unknown }
+  return {
+    ...actual,
+    applyMatchUpdate,
+    useMatches: () => {
+      const { ref, computed } = require('vue') as typeof import('vue')
+      const data = ref<import('../../shared/types/matches').MatchListItem[]>([])
+      return {
+        data,
+        pending: ref(false),
+        error: ref<string | null>(null),
+        load: vi.fn(async () => {
+          const result = await (globalThis.$fetch as (url: string) => Promise<{ matches: import('../../shared/types/matches').MatchListItem[] }>)('/api/matches')
+          data.value = result.matches
+        }),
+        subscribe: vi.fn(() => vi.fn()), // no-op cleanup in nuxt test env
+        updateMatch: vi.fn(),
+        lockNow: vi.fn(),
+      }
+    },
+  }
+})
+
+// ---------------------------------------------------------------------------
 // B14 — MatchPredictionCard (R-PRED-07)
 // ---------------------------------------------------------------------------
 
@@ -283,26 +315,30 @@ describe('predictions.vue page — card list redesign (R-PRED-06)', () => {
     )
   })
 
-  it('T-50-01: renders one MatchPredictionCard per scheduled match', async () => {
+  it('T-50-01: renders cards for scheduled AND finished eligible matches', async () => {
     const { default: PredictionsPage } = await import(
       '../../app/pages/rooms/[id]/predictions.vue'
     )
     const wrapper = await mountSuspended(PredictionsPage)
     await flushPromises()
-    // Should have exactly 1 card (only scheduledMatch passes filter)
+    // scheduledMatch + finishedMatch both pass the eligibleEntries filter (slice 6)
     const cards = wrapper.findAll('[data-testid="prediction-card"]')
-    expect(cards).toHaveLength(1)
+    expect(cards).toHaveLength(2)
   })
 
-  it('T-50-02: non-scheduled matches are excluded from card list', async () => {
+  it('T-50-02: postponed matches are excluded from card list', async () => {
+    const postponedMatch: MatchListItem = {
+      ...scheduledMatch,
+      id: '55555555-5555-4555-8555-555555555555',
+      status: 'postponed',
+    }
     vi.stubGlobal(
       '$fetch',
       vi.fn(async (url: string) => {
         if (typeof url === 'string' && url.includes('/predictions')) {
           return { predictions: [] }
         }
-        // Only finished matches — match-client destructures { matches }
-        return { matches: [finishedMatch] }
+        return { matches: [postponedMatch] }
       }),
     )
     const { default: PredictionsPage } = await import(
@@ -361,5 +397,160 @@ describe('predictions.vue page — card list redesign (R-PRED-06)', () => {
     )
     const wrapper = await mountSuspended(PredictionsPage)
     expect(wrapper.element).toBeDefined()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// B33 — T-89: [RED] MatchPredictionCard read-only modes for live/finished
+// ---------------------------------------------------------------------------
+
+const liveMatch: MatchListItem = {
+  ...scheduledMatch,
+  id: '33333333-3333-4333-8333-333333333333',
+  status: 'live',
+  home_score: null,
+  away_score: null,
+}
+
+describe('MatchPredictionCard — read-only modes (R-PRED-07)', () => {
+  beforeEach(() => {
+    vi.stubGlobal('$fetch', vi.fn(async () => ({ prediction: existingPrediction })))
+  })
+
+  it('T-89-01: live match + unlocked → inputs readonly, no submit button, "En vivo" badge', async () => {
+    const { default: MatchPredictionCard } = await import(
+      '../../app/components/MatchPredictionCard.vue'
+    )
+    const wrapper = await mountSuspended(MatchPredictionCard, {
+      props: { match: liveMatch, existingPrediction: null, roomId: ROOM_ID },
+    })
+    const homeInput = wrapper.find('input[name="predicted_home"]')
+    const awayInput = wrapper.find('input[name="predicted_away"]')
+    expect((homeInput.element as HTMLInputElement).readOnly).toBe(true)
+    expect((awayInput.element as HTMLInputElement).readOnly).toBe(true)
+    expect(wrapper.find('button[type="submit"]').exists()).toBe(false)
+    expect(wrapper.html()).toContain('En vivo')
+    expect(wrapper.html()).not.toContain('data-testid="lock-badge"')
+  })
+
+  it('T-89-02: finished match + unlocked + scores → inputs readonly, "Finalizado" badge, final-score block', async () => {
+    const { default: MatchPredictionCard } = await import(
+      '../../app/components/MatchPredictionCard.vue'
+    )
+    const wrapper = await mountSuspended(MatchPredictionCard, {
+      props: { match: finishedMatch, existingPrediction: null, roomId: ROOM_ID },
+    })
+    const homeInput = wrapper.find('input[name="predicted_home"]')
+    const awayInput = wrapper.find('input[name="predicted_away"]')
+    expect((homeInput.element as HTMLInputElement).readOnly).toBe(true)
+    expect((awayInput.element as HTMLInputElement).readOnly).toBe(true)
+    expect(wrapper.find('button[type="submit"]').exists()).toBe(false)
+    expect(wrapper.html()).toContain('Finalizado')
+    expect(wrapper.find('[data-testid="final-score"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="final-score"]').text()).toContain('2')
+    expect(wrapper.find('[data-testid="final-score"]').text()).toContain('1')
+  })
+
+  it('T-89-03: finished + locked → both lock badge AND final score block visible', async () => {
+    const { default: MatchPredictionCard } = await import(
+      '../../app/components/MatchPredictionCard.vue'
+    )
+    const wrapper = await mountSuspended(MatchPredictionCard, {
+      props: { match: finishedMatch, existingPrediction: lockedPrediction, roomId: ROOM_ID },
+    })
+    expect(wrapper.find('[data-testid="lock-badge"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="final-score"]').exists()).toBe(true)
+  })
+
+  it('T-89-04: scheduled + unlocked → inputs editable, submit button rendered (regression guard)', async () => {
+    const { default: MatchPredictionCard } = await import(
+      '../../app/components/MatchPredictionCard.vue'
+    )
+    const wrapper = await mountSuspended(MatchPredictionCard, {
+      props: { match: scheduledMatch, existingPrediction: null, roomId: ROOM_ID },
+    })
+    const homeInput = wrapper.find('input[name="predicted_home"]')
+    expect((homeInput.element as HTMLInputElement).readOnly).toBe(false)
+    expect(wrapper.find('button[type="submit"]').exists()).toBe(true)
+  })
+
+  it('T-89-05: status transition scheduled→finished → submit disappears, final-score appears', async () => {
+    const { default: MatchPredictionCard } = await import(
+      '../../app/components/MatchPredictionCard.vue'
+    )
+    const wrapper = await mountSuspended(MatchPredictionCard, {
+      props: { match: scheduledMatch, existingPrediction: null, roomId: ROOM_ID },
+    })
+    expect(wrapper.find('button[type="submit"]').exists()).toBe(true)
+    await wrapper.setProps({ match: { ...finishedMatch, home_score: 3, away_score: 0 } })
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('button[type="submit"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="final-score"]').exists()).toBe(true)
+  })
+
+  it('T-89-06: finished + null scores → final-score block NOT rendered (defensive guard)', async () => {
+    const matchFinishedNullScores: MatchListItem = {
+      ...finishedMatch,
+      home_score: null,
+      away_score: null,
+    }
+    const { default: MatchPredictionCard } = await import(
+      '../../app/components/MatchPredictionCard.vue'
+    )
+    const wrapper = await mountSuspended(MatchPredictionCard, {
+      props: { match: matchFinishedNullScores, existingPrediction: null, roomId: ROOM_ID },
+    })
+    expect(wrapper.find('[data-testid="final-score"]').exists()).toBe(false)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// B34 — T-91: [RED] predictions.vue filter widening + subscribe lifecycle
+// ---------------------------------------------------------------------------
+
+describe('predictions.vue — filter widening and subscribe lifecycle (R-PRED-06, R-RT-04)', () => {
+  const mockSubscribeCleanup = vi.fn()
+  const mockSubscribe = vi.fn(() => mockSubscribeCleanup)
+
+  beforeEach(() => {
+    mockSubscribeCleanup.mockClear()
+    mockSubscribe.mockClear()
+    mockSubscribe.mockReturnValue(mockSubscribeCleanup)
+  })
+
+  it('T-91-01: renders cards for scheduled, live, AND finished matches; postponed excluded', async () => {
+    const postponedMatch: MatchListItem = {
+      ...scheduledMatch,
+      id: '44444444-4444-4444-8444-444444444444',
+      status: 'postponed',
+    }
+    vi.stubGlobal(
+      '$fetch',
+      vi.fn(async (url: string) => {
+        if (typeof url === 'string' && url.includes('/predictions')) {
+          return { predictions: [] }
+        }
+        return { matches: [scheduledMatch, liveMatch, finishedMatch, postponedMatch] }
+      }),
+    )
+    const { default: PredictionsPage } = await import(
+      '../../app/pages/rooms/[id]/predictions.vue'
+    )
+    const wrapper = await mountSuspended(PredictionsPage)
+    await flushPromises()
+    const cards = wrapper.findAll('[data-testid="prediction-card"]')
+    // scheduled + live + finished = 3 cards; postponed excluded
+    expect(cards).toHaveLength(3)
+  })
+
+  it('T-91-02: eligibleEntries computed ref name (structural)', async () => {
+    const fs = await import('fs')
+    const path = await import('path')
+    const src = fs.readFileSync(
+      path.resolve(process.cwd(), 'app/pages/rooms/[id]/predictions.vue'),
+      'utf-8',
+    )
+    expect(src).toContain('eligibleEntries')
+    expect(src).not.toContain('scheduledEntries')
   })
 })

@@ -26,6 +26,9 @@ const success = ref(false)
 
 const isLocked = computed(() => props.existingPrediction?.locked_at !== null && props.existingPrediction?.locked_at !== undefined)
 
+// Status-based read-only mode (D8) — independent of lock state
+const isReadonly = computed(() => props.match.status !== 'scheduled')
+
 const predClient = makePredictionClient($fetch)
 
 // ---------------------------------------------------------------------------
@@ -33,7 +36,7 @@ const predClient = makePredictionClient($fetch)
 // ---------------------------------------------------------------------------
 
 async function handleSubmit() {
-  if (isLocked.value) return
+  if (isLocked.value || isReadonly.value) return
   submitting.value = true
   error.value = null
   success.value = false
@@ -107,6 +110,24 @@ function formatKickoff(kickoffAt: string): string {
       🔒 Predicción bloqueada
     </div>
 
+    <!-- En vivo badge (status-based, not locked) -->
+    <div
+      v-if="match.status === 'live' && !isLocked"
+      class="flex items-center gap-1 rounded-md bg-red-50 border border-red-300 px-2 py-1 text-xs text-red-800 w-fit"
+      data-testid="live-badge"
+    >
+      🔴 En vivo
+    </div>
+
+    <!-- Finalizado badge (status-based, not locked) -->
+    <div
+      v-if="match.status === 'finished' && !isLocked"
+      class="flex items-center gap-1 rounded-md bg-gray-50 border border-gray-300 px-2 py-1 text-xs text-gray-700 w-fit"
+      data-testid="finished-badge"
+    >
+      ✅ Finalizado
+    </div>
+
     <!-- Score inputs -->
     <form
       class="space-y-3"
@@ -128,7 +149,7 @@ function formatKickoff(kickoffAt: string): string {
             min="0"
             max="15"
             class="w-full rounded-md border px-3 py-2 text-sm text-center"
-            :readonly="isLocked"
+            :readonly="isLocked || isReadonly"
             required
           >
         </div>
@@ -150,7 +171,7 @@ function formatKickoff(kickoffAt: string): string {
             min="0"
             max="15"
             class="w-full rounded-md border px-3 py-2 text-sm text-center"
-            :readonly="isLocked"
+            :readonly="isLocked || isReadonly"
             required
           >
         </div>
@@ -192,9 +213,18 @@ function formatKickoff(kickoffAt: string): string {
         ¡Predicción guardada!
       </div>
 
-      <!-- Submit button — hidden when locked -->
+      <!-- Final score block — shown when finished and scores are non-null -->
+      <div
+        v-if="match.status === 'finished' && match.home_score != null && match.away_score != null"
+        class="rounded-md bg-muted/40 px-3 py-2 text-center text-sm font-mono"
+        data-testid="final-score"
+      >
+        Final: {{ match.home_score }} - {{ match.away_score }}
+      </div>
+
+      <!-- Submit button — hidden when locked or readonly -->
       <button
-        v-if="!isLocked"
+        v-if="!isLocked && !isReadonly"
         type="submit"
         :disabled="submitting"
         class="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"

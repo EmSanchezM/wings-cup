@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { makePredictionClient } from '~/utils/prediction-client'
-import { useMatches } from '~/composables/useMatches'
+import { useMatches, applyMatchUpdate } from '~/composables/useMatches'
 import MatchPredictionCard from '~/components/MatchPredictionCard.vue'
 import type { MatchListItem } from '~~/shared/types/matches'
 import type { Prediction } from '~~/shared/types/predictions'
@@ -15,7 +15,10 @@ const predClient = makePredictionClient($fetch)
 const predictionsMap = ref<Map<string, Prediction>>(new Map())
 const isLoading = ref(true)
 
-// Client-side join helper (T-52)
+// Subscription cleanup ref — D9 pattern
+const cleanup = ref<(() => void) | null>(null)
+
+// Client-side join helper
 function joinMatchesWithPredictions(
   matches: MatchListItem[],
   predictionsMap: Map<string, Prediction>,
@@ -26,13 +29,18 @@ function joinMatchesWithPredictions(
   }))
 }
 
-const scheduledEntries = computed(() => {
-  const now = new Date()
-  const scheduled = (allMatches.value ?? []).filter(
-    (m) => m.status === 'scheduled' && new Date(m.kickoff_at) > now,
+// Filter widened from 'scheduled' only to ['scheduled', 'live', 'finished'] — R-PRED-06
+const eligibleEntries = computed(() => {
+  const eligible = (allMatches.value ?? []).filter(
+    (m) => ['scheduled', 'live', 'finished'].includes(m.status),
   )
-  return joinMatchesWithPredictions(scheduled, predictionsMap.value)
+  return joinMatchesWithPredictions(eligible, predictionsMap.value)
 })
+
+// Realtime reducer — R-RT-04 / design D5a
+function onMatchUpdate(payload: { new: MatchListItem }) {
+  allMatches.value = applyMatchUpdate(allMatches.value, payload)
+}
 
 onMounted(async () => {
   try {
@@ -51,6 +59,15 @@ onMounted(async () => {
   } finally {
     isLoading.value = false
   }
+
+  // Subscribe to realtime match updates
+  const { subscribe } = useMatches()
+  cleanup.value = subscribe(onMatchUpdate)
+})
+
+onUnmounted(() => {
+  cleanup.value?.()
+  cleanup.value = null
 })
 </script>
 
@@ -79,7 +96,7 @@ onMounted(async () => {
       <template v-else>
         <!-- Empty state -->
         <div
-          v-if="scheduledEntries.length === 0"
+          v-if="eligibleEntries.length === 0"
           class="rounded-lg border border-dashed p-8 text-center space-y-3"
         >
           <p class="text-sm text-muted-foreground">
@@ -93,13 +110,13 @@ onMounted(async () => {
           </NuxtLink>
         </div>
 
-        <!-- Card list — one per scheduled match -->
+        <!-- Card list — one per eligible match (scheduled, live, finished) -->
         <div
           v-else
           class="space-y-4"
         >
           <MatchPredictionCard
-            v-for="entry in scheduledEntries"
+            v-for="entry in eligibleEntries"
             :key="entry.match.id"
             :match="entry.match"
             :existing-prediction="entry.prediction"
