@@ -73,6 +73,38 @@ vi.mock('#app', async (importOriginal) => {
 })
 
 // ---------------------------------------------------------------------------
+// Mock useMatches subscribe — in the nuxt test env, useSupabaseClient cannot
+// initialize (no SUPABASE_URL/KEY). We mock useMatches to return a no-op
+// subscribe so predictions.vue onMounted doesn't throw unhandled rejections.
+// The subscribe behavior is fully tested in unit tests.
+// ---------------------------------------------------------------------------
+
+vi.mock('~/composables/useMatches', async (importOriginal) => {
+  const actual = await importOriginal<Record<string, unknown>>()
+  const { applyMatchUpdate } = actual as { applyMatchUpdate: (...args: unknown[]) => unknown }
+  return {
+    ...actual,
+    applyMatchUpdate,
+    useMatches: () => {
+      const { ref, computed } = require('vue') as typeof import('vue')
+      const data = ref<import('../../shared/types/matches').MatchListItem[]>([])
+      return {
+        data,
+        pending: ref(false),
+        error: ref<string | null>(null),
+        load: vi.fn(async () => {
+          const result = await (globalThis.$fetch as (url: string) => Promise<{ matches: import('../../shared/types/matches').MatchListItem[] }>)('/api/matches')
+          data.value = result.matches
+        }),
+        subscribe: vi.fn(() => vi.fn()), // no-op cleanup in nuxt test env
+        updateMatch: vi.fn(),
+        lockNow: vi.fn(),
+      }
+    },
+  }
+})
+
+// ---------------------------------------------------------------------------
 // B14 — MatchPredictionCard (R-PRED-07)
 // ---------------------------------------------------------------------------
 
