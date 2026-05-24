@@ -34,14 +34,18 @@ New capability. Full spec for per-room standings: SELECT-based query, tie-break 
 - **Given** a component uses `useLeaderboard(roomId)` **When** the composable mounts **Then** it calls `GET /api/rooms/{roomId}/leaderboard` and exposes `data`, `pending`, and `error` reactive refs.
 - **Given** the leaderboard API returns a network error **When** `useLeaderboard` handles the response **Then** `error` is set and `data` remains empty, preventing a render crash.
 
-### R-LEAD-04: Leaderboard Page Navigation
-**Type**: NEW
-**Source**: C3 / proposal §In Scope
-**Statement**: `app/pages/rooms/[id]/leaderboard.vue` MUST be accessible via navigation from `app/pages/rooms/[id]/index.vue`. The room index page MUST be updated to include a link/button to the leaderboard. The leaderboard page MUST be protected — unauthenticated users are redirected to `/login`.
+### R-LEAD-04: Leaderboard Page Auth Guard
+**Type**: MODIFIED
+**Source**: S-02 (predictions-ux-and-guards, Slice 4)
+(Previously: NEW — "Page MUST be protected, unauthenticated users redirected to `/login`")
+
+`app/pages/rooms/[id]/leaderboard.vue` MUST NOT contain a `useSupabaseUser()` import or any `onMounted` redirect block that checks `user.value`. Authentication enforcement MUST be delegated exclusively to the `@nuxtjs/supabase` module's `redirectOptions.include` list which already covers `/rooms(/*)` routes in `nuxt.config.ts`. The `load()` call from `useLeaderboard()` MUST be invoked inside a plain `onMounted(() => load())`. Stale-session failures (401 from the leaderboard API) MUST surface via the `useLeaderboard().error` ref — they MUST NOT be swallowed silently and MUST NOT trigger a manual `navigateTo` redirect from the page component.
 
 **Scenarios**:
-- **Given** an authenticated room member views `rooms/[id]/index.vue` **When** the page renders **Then** a link or button to `rooms/[id]/leaderboard` is visible.
-- **Given** an unauthenticated user navigates to `rooms/[id]/leaderboard` **When** the auth guard runs **Then** the user is redirected to `/login`.
+- **Given** a user is not authenticated (no valid session cookie) **When** they navigate to `rooms/[id]/leaderboard` **Then** the `@nuxtjs/supabase` middleware intercepts the navigation AND the user is redirected to the configured login route AND the leaderboard page component is never mounted
+- **Given** the `leaderboard.vue` source file is inspected **When** checking for `useSupabaseUser` imports or `navigateTo('/login')` calls inside `onMounted` **Then** neither is present
+- **Given** the user is authenticated and navigates to `rooms/[id]/leaderboard` **When** the page component mounts **Then** `onMounted(() => load())` fires immediately AND leaderboard data is fetched from the API
+- **Given** the user's JWT has expired mid-session **When** the page is already mounted and `load()` calls the leaderboard API **Then** the API returns 401 AND `useLeaderboard().error` is set to the error value AND no automatic `navigateTo` redirect is triggered from the page component
 
 ## Out of Scope
 - Real-time leaderboard updates (deferred to a future slice).
