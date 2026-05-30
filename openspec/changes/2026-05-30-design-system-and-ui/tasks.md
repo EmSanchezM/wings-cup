@@ -121,10 +121,10 @@
 ## B45 — leaderboard.vue restyle (RED → GREEN)
 **Satisfies**: R-UX-09 · **Files**: `tests/nuxt/leaderboard.nuxt.test.ts` (extend), `app/pages/rooms/[id]/leaderboard.vue`
 
-- [ ] T-128: [RED] Extend leaderboard nuxt test — rows show initials avatar + name + points; current-user row highlighted + "Tú"; promedio grupo derived; partidos restantes derived; **no trend/aciertos/premios** rendered.
-- [ ] T-129: [GREEN] Restyle `leaderboard.vue` — token rows, initials avatar from `display_name`, "Tú" highlight via `useSupabaseUser`, stats panel (avg `total_points`; non-finished match count via read-only `useMatches().load()`). Preserve existing realtime subscribe/cleanup.
-- [ ] T-130: [VERIFY] Existing leaderboard + realtime tests green unmodified; additions read-only.
-- [ ] T-131: [CHORE] Tests green; `vue-tsc` clean; commit + open PR 4 → PR1.
+- [x] T-128: [RED] `tests/nuxt/leaderboard-redesign.nuxt.test.ts` (4) — initials avatars, "Tú" highlight (mockNuxtImport user), promedio 8.5 + partidos restantes 2 derived, no trend/aciertos/premios.
+- [x] T-129: [GREEN] Restyle `leaderboard.vue` — token ranking rows, initials avatar, "Tú" highlight via `useSupabaseUser`, stats sidebar (avg `total_points`; non-finished count via read-only `loadMatches()`). All existing realtime wiring (subscribe/cleanup/applyMemberUpdate/onMatchUpdate/matches-leaderboard-reload) preserved.
+- [x] T-130: [VERIFY] 7 existing leaderboard realtime tests green unmodified (nuxt 67/67); additions read-only (no writes/endpoints/schema); "Tabla de Posiciones" heading kept.
+- [x] T-131: [CHORE] unit 215 + nuxt 67 green; `vue-tsc` clean; committed. ⏳ Push + open PR 4 pending user merge.
 
 ---
 

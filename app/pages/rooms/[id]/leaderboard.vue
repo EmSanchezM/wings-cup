@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useLeaderboard, applyMemberUpdate } from '~/composables/useLeaderboard'
 import { useMatches } from '~/composables/useMatches'
 import type { RoomMember } from '~~/shared/types/rooms'
 import type { MatchListItem } from '~~/shared/types/matches'
+import type { LeaderboardEntry } from '~~/shared/types/leaderboard'
 
 const route = useRoute()
 const roomId = route.params.id as string
@@ -11,8 +12,12 @@ const roomId = route.params.id as string
 // Auth enforced by @nuxtjs/supabase redirectOptions — covers /rooms/** routes.
 const { data: leaderboard, pending, error, load, subscribe } = useLeaderboard(roomId)
 
-// Secondary reload path — R-RT-06 / R-LEAD-04 (matches-driven)
-const { subscribe: subscribeMatches } = useMatches()
+// Secondary reload path — R-RT-06 / R-LEAD-04 (matches-driven). The matches data
+// is also read (read-only) to derive the "partidos restantes" stat.
+const { data: matchesData, load: loadMatches, subscribe: subscribeMatches } = useMatches()
+
+// Current user — drives the "Tú" row highlight only (read-only, presentational).
+const user = useSupabaseUser()
 
 // Subscription cleanup refs — D9 pattern
 const cleanup = ref<(() => void) | null>(null)
@@ -35,8 +40,28 @@ function onMatchUpdate(payload: { new: MatchListItem }) {
   }, 300)
 }
 
+// --- Presentational derived data (read-only) ---
+function initials(name: string): string {
+  const w = name.trim().split(/\s+/).filter(Boolean)
+  if (w.length >= 2) return (w[0]![0]! + w[1]![0]!).toUpperCase()
+  return (w[0] ?? '').slice(0, 2).toUpperCase()
+}
+function isMe(entry: LeaderboardEntry): boolean {
+  return !!user.value && entry.user_id === user.value.id
+}
+const promedio = computed(() => {
+  const entries = leaderboard.value
+  if (!entries || entries.length === 0) return '0'
+  const avg = entries.reduce((sum, e) => sum + e.total_points, 0) / entries.length
+  return avg.toFixed(1)
+})
+const partidosRestantes = computed(
+  () => (matchesData.value ?? []).filter((m) => m.status !== 'finished').length,
+)
+
 onMounted(() => {
   void load()
+  void loadMatches() // read-only, for the "partidos restantes" stat
   cleanup.value = subscribe(onMemberUpdate)
   matchesCleanup = subscribeMatches(onMatchUpdate, 'matches-leaderboard-reload')
 })
@@ -55,17 +80,23 @@ onUnmounted(() => {
 
 <template>
   <div class="min-h-screen p-4 sm:p-8">
-    <div class="mx-auto w-full max-w-2xl space-y-6">
+    <div class="mx-auto w-full max-w-5xl space-y-6">
       <header class="space-y-1">
         <NuxtLink
           :to="`/rooms/${roomId}`"
-          class="text-xs text-muted-foreground hover:underline"
+          class="text-xs text-muted-foreground hover:text-foreground"
         >
           ← Volver a la sala
         </NuxtLink>
         <h1 class="text-2xl font-bold tracking-tight">
           Tabla de Posiciones
         </h1>
+        <p
+          v-if="!pending && !error"
+          class="text-sm text-muted-foreground"
+        >
+          {{ leaderboard.length }} participante<span v-if="leaderboard.length !== 1">s</span>
+        </p>
       </header>
 
       <p
@@ -83,51 +114,85 @@ onUnmounted(() => {
         {{ error }}
       </p>
 
-      <section
+      <div
         v-else
-        class="rounded-lg border"
+        class="grid gap-6 lg:grid-cols-[1fr_280px]"
       >
-        <table class="w-full text-sm">
-          <thead>
-            <tr class="border-b bg-muted/40 text-left">
-              <th class="px-4 py-3 font-semibold">
-                #
-              </th>
-              <th class="px-4 py-3 font-semibold">
-                Jugador
-              </th>
-              <th class="px-4 py-3 text-right font-semibold">
-                Puntos
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="(entry, index) in leaderboard"
-              :key="entry.user_id"
-              class="border-b last:border-0"
+        <!-- Ranking rows -->
+        <section class="overflow-hidden rounded-xl border bg-card">
+          <div class="flex items-center gap-3 border-b bg-muted/40 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            <span class="w-5 text-center">#</span>
+            <span class="w-8" />
+            <span class="flex-1">Jugador</span>
+            <span>Puntos</span>
+          </div>
+
+          <div
+            v-for="(entry, index) in leaderboard"
+            :key="entry.user_id"
+            :data-testid="isMe(entry) ? 'lb-row-me' : 'lb-row'"
+            class="flex items-center gap-3 border-b px-4 py-3 last:border-0"
+            :class="isMe(entry) ? 'border-l-2 border-l-primary bg-primary/10' : ''"
+          >
+            <span class="w-5 text-center text-sm font-semibold text-muted-foreground">
+              {{ index + 1 }}
+            </span>
+            <span
+              data-testid="lb-avatar"
+              class="flex size-8 items-center justify-center rounded-full bg-secondary text-xs font-semibold text-secondary-foreground"
             >
-              <td class="px-4 py-3 text-muted-foreground">
-                {{ index + 1 }}
-              </td>
-              <td class="px-4 py-3">
-                {{ entry.display_name }}
-              </td>
-              <td class="px-4 py-3 text-right font-mono font-semibold">
-                {{ entry.total_points }}
-              </td>
-            </tr>
-            <tr v-if="leaderboard.length === 0">
-              <td
-                colspan="3"
-                class="px-4 py-6 text-center text-muted-foreground"
+              {{ initials(entry.display_name) }}
+            </span>
+            <span
+              class="flex-1 truncate text-sm font-medium"
+              :class="isMe(entry) ? 'text-primary' : ''"
+            >
+              {{ isMe(entry) ? 'Tú' : entry.display_name }}
+            </span>
+            <span class="font-mono font-semibold tabular-nums">
+              {{ entry.total_points }}
+            </span>
+          </div>
+
+          <div
+            v-if="leaderboard.length === 0"
+            class="px-4 py-8 text-center text-sm text-muted-foreground"
+          >
+            Sin miembros todavía.
+          </div>
+        </section>
+
+        <!-- League stats sidebar (derived) -->
+        <aside class="h-fit space-y-4 rounded-xl border bg-card p-5 lg:sticky lg:top-8">
+          <h2 class="text-sm font-semibold">
+            Estadísticas de la liga
+          </h2>
+          <dl class="space-y-3 text-sm">
+            <div class="flex items-center justify-between">
+              <dt class="text-muted-foreground">
+                Promedio grupo
+              </dt>
+              <dd
+                data-testid="promedio"
+                class="font-semibold"
               >
-                Sin miembros todavía.
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
+                {{ promedio }}<span class="ml-1 text-xs font-normal text-muted-foreground">pts</span>
+              </dd>
+            </div>
+            <div class="flex items-center justify-between">
+              <dt class="text-muted-foreground">
+                Partidos restantes
+              </dt>
+              <dd
+                data-testid="partidos-restantes"
+                class="font-semibold"
+              >
+                {{ partidosRestantes }}
+              </dd>
+            </div>
+          </dl>
+        </aside>
+      </div>
     </div>
   </div>
 </template>
