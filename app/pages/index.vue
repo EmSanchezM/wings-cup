@@ -2,7 +2,15 @@
 import { Trophy, PlusCircle, UserPlus, Flag, ArrowRight } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 
+definePageMeta({ layout: false })
+
 const year = new Date().getFullYear()
+
+// Auth-aware CTAs: a logged-in visitor lands here (e.g. after logout it's the root,
+// or via the URL) and should be sent to their rooms, not the login form.
+const user = useSupabaseUser()
+const isAuthed = computed(() => !!user.value)
+const ctaTo = computed(() => (isAuthed.value ? '/rooms' : '/auth/login'))
 
 const steps = [
   {
@@ -35,8 +43,8 @@ const steps = [
         as-child
         size="sm"
       >
-        <NuxtLink to="/auth/login">
-          Entrar
+        <NuxtLink :to="ctaTo">
+          {{ isAuthed ? 'Ir a mis salas' : 'Entrar' }}
         </NuxtLink>
       </Button>
     </header>
@@ -71,8 +79,8 @@ const steps = [
               as-child
               size="lg"
             >
-              <NuxtLink to="/auth/login">
-                Empezá a predecir
+              <NuxtLink :to="ctaTo">
+                {{ isAuthed ? 'Ir a mis salas' : 'Empezá a predecir' }}
                 <ArrowRight class="size-4" />
               </NuxtLink>
             </Button>
@@ -179,8 +187,8 @@ const steps = [
               as-child
               size="lg"
             >
-              <NuxtLink to="/auth/login">
-                Comenzá ahora
+              <NuxtLink :to="ctaTo">
+                {{ isAuthed ? 'Ir a mis salas' : 'Comenzá ahora' }}
                 <ArrowRight class="size-4" />
               </NuxtLink>
             </Button>
