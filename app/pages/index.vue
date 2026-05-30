@@ -103,18 +103,34 @@ const steps = [
           </div>
           <div class="flex items-center justify-between rounded-xl bg-secondary/40 px-4 py-5">
             <div class="flex flex-col items-center gap-2">
-              <span class="size-9 rounded-full bg-muted" />
+              <TeamFlag
+                team="Argentina"
+                :size="40"
+              />
               <span class="text-sm font-semibold">ARG</span>
             </div>
             <span class="text-3xl font-bold tracking-widest">2 - 1</span>
             <div class="flex flex-col items-center gap-2">
-              <span class="size-9 rounded-full bg-muted" />
+              <TeamFlag
+                team="Chile"
+                :size="40"
+              />
               <span class="text-sm font-semibold">CHI</span>
             </div>
           </div>
           <div class="mt-4 flex items-center justify-between rounded-xl border border-border px-4 py-4 text-sm">
             <span class="text-muted-foreground">Grupo C · 18 JUN</span>
-            <span class="font-medium">BRA <span class="text-muted-foreground">vs</span> COL</span>
+            <span class="flex items-center gap-2 font-medium">
+              <TeamFlag
+                team="Brazil"
+                :size="20"
+              />
+              BRA <span class="text-muted-foreground">vs</span> COL
+              <TeamFlag
+                team="Colombia"
+                :size="20"
+              />
+            </span>
           </div>
         </div>
       </section>
