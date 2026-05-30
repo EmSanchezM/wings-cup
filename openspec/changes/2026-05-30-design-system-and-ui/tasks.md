@@ -133,16 +133,15 @@
 ## B46 — Select primitive (RED → GREEN)
 **Satisfies**: R-UX-08 (control) · **Files**: `tests/nuxt/select.nuxt.test.ts`, `app/components/ui/select/*`
 
-- [ ] T-132: [RED] `tests/nuxt/select.nuxt.test.ts` — trigger renders; four values `scheduled|live|finished|postponed` exposed; `v-model` updates on selection. (Fallback: test styled native `<select>`.)
-- [ ] T-133: [GREEN] Create `app/components/ui/select/*` (reka-ui port per `design.md` §3) OR token-styled native fallback.
+- [~] T-132/T-133: **DROPPED — pre-approved native fallback used instead of a reka-ui `Select` component.** Rationale: admin is strict script-invariant, so importing a `Select` component would modify `<script setup>`; and a 6-file reka-ui Portal port for one internal admin dropdown is disproportionate (design.md §3 pre-approved this fallback). The status control is a **token-styled native `<select>`** in the admin template — keeps the admin script byte-identical, same `v-model`, same four values. No `ui/select/*` component created this slice; B46 superseded by the styling in B47.
 
 ## B47 — admin restyle (RED → GREEN, script-invariant)
 **Satisfies**: R-UX-08 (page) · **Files**: `tests/nuxt/admin-matches.nuxt.test.ts` (extend if present), `app/pages/admin/matches/index.vue`
 
-- [ ] T-134: [PREP] Read admin script; confirm `ensureSuperAdmin`/`startEdit`/`saveEdit`/`cancelEdit`/`handleLockNow` + refs to preserve verbatim.
-- [ ] T-135: [RED] Extend admin test — rows on card surface + status `Badge`; status control bound to `editDrafts[id].status` with four values.
-- [ ] T-136: [GREEN] Restyle `admin/matches/index.vue` **template/classes only** — lock-now panel, card list, `Badge`, edit-form grid; native `<select>` → `Select` (same model + four values). Script untouched.
-- [ ] T-137: [VERIFY+CHORE] Diff script vs pre-restyle — identical; pre-existing admin tests green unmodified; `package.json` deps unchanged; commit + open PR 5 → PR1.
+- [x] T-134: [PREP] Read admin script; confirmed `ensureSuperAdmin`/`startEdit`/`saveEdit`/`cancelEdit`/`handleLockNow` + refs to preserve verbatim.
+- [x] T-135: [RED] `tests/nuxt/admin-matches.nuxt.test.ts` (2) — authorized → match row on `bg-card` surface + `admin-status-badge`; edit form exposes four status values bound to draft.
+- [x] T-136: [GREEN] Restyle `admin/matches/index.vue` **template only** — lock-now panel + match rows on `bg-card`, token status badge, `<TeamFlag>` per team, token-styled native `<select>` (same model + four values), edit-form grid. **`<script setup>` byte-identical to origin/main (verified via diff).**
+- [x] T-137: [VERIFY+CHORE] Admin script byte-identical (diff ✓); unit 215 + nuxt 69 green; `vue-tsc` clean; `package.json` deps unchanged. ⏳ Push + open PR 5 pending user merge.
 
 ---
 
