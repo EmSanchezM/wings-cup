@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue'
 import { Trophy, Users, Flag, BarChart3, Copy, Check } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import type { Room, RoomMember } from '~~/shared/types/rooms'
+import type { Room, RoomMemberView } from '~~/shared/types/rooms'
 
 // Auth enforced by @nuxtjs/supabase redirectOptions (covers /rooms/**)
 const route = useRoute()
@@ -11,7 +11,7 @@ const roomClient = useRoom()
 const roomId = route.params.id as string
 
 const room = ref<Room | null>(null)
-const members = ref<RoomMember[]>([])
+const members = ref<RoomMemberView[]>([])
 const isLoading = ref(true)
 const error = ref<string | null>(null)
 
@@ -29,8 +29,10 @@ async function copyCode(code: string) {
   }
 }
 
-function memberInitials(userId: string): string {
-  return userId.replace(/[^a-z0-9]/gi, '').slice(0, 2).toUpperCase() || '··'
+function memberInitials(name: string): string {
+  const words = name.trim().split(/\s+/).filter(Boolean)
+  if (words.length >= 2) return (words[0]![0]! + words[1]![0]!).toUpperCase()
+  return (words[0] ?? '').slice(0, 2).toUpperCase() || '··'
 }
 
 onMounted(async () => {
@@ -137,10 +139,10 @@ onMounted(async () => {
               class="flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-secondary/40"
             >
               <span class="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-semibold text-secondary-foreground">
-                {{ memberInitials(member.user_id) }}
+                {{ memberInitials(member.display_name) }}
               </span>
-              <span class="min-w-0 flex-1 truncate font-mono text-xs text-muted-foreground">
-                {{ member.user_id }}
+              <span class="min-w-0 flex-1 truncate text-sm font-medium">
+                {{ member.display_name || 'Sin nombre' }}
               </span>
               <Badge :variant="member.role === 'owner' ? 'accent' : 'secondary'">
                 {{ member.role === 'owner' ? 'Dueño' : 'Miembro' }}

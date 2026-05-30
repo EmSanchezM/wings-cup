@@ -3,10 +3,10 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '../../../shared/types/database.types'
 import { getRoomHandler, RoomNotFoundError } from '../../../server/handlers/get-room'
 
-type SingleResult = { data: Record<string, unknown> | null; error: { message: string } | null }
-type ListResult = { data: unknown[] | null; error: { message: string } | null }
+type SingleResult = { data: Record<string, unknown> | null, error: { message: string } | null }
+type ListResult = { data: unknown[] | null, error: { message: string } | null }
 
-function makeMockClient(opts: { room: SingleResult; members: ListResult }) {
+function makeMockClient(opts: { room: SingleResult, members: ListResult }) {
   const maybeSingle = vi.fn(async () => opts.room)
   const roomEq = vi.fn(() => ({ maybeSingle }))
   const roomSelect = vi.fn(() => ({ eq: roomEq }))
@@ -25,21 +25,26 @@ function makeMockClient(opts: { room: SingleResult; members: ListResult }) {
 }
 
 describe('getRoomHandler (R-ROOMS-03)', () => {
-  it('returns the room with its members', async () => {
+  it('returns the room with its members, flattening the joined profile name', async () => {
     const room = {
       id: 'r1', name: 'Amigos', prize_description: 'Birra', invite_code: 'AB12CD',
       status: 'active', created_at: '2026-05-17T12:00:00Z', created_by: 'user-1',
       scoring_rules: { exact_score: 5, correct_goal_diff: 3, correct_result: 1 },
     }
+    // room_members rows JOIN profiles(display_name) — same pattern as get-leaderboard.
     const members = [
-      { room_id: 'r1', user_id: 'user-1', role: 'owner', total_points: 0, joined_at: '2026-05-17T12:00:00Z' },
-      { room_id: 'r1', user_id: 'user-2', role: 'member', total_points: 0, joined_at: '2026-05-17T13:00:00Z' },
+      { user_id: 'user-1', role: 'owner', joined_at: '2026-05-17T12:00:00Z', profiles: { display_name: 'Pepe' } },
+      { user_id: 'user-2', role: 'member', joined_at: '2026-05-17T13:00:00Z', profiles: { display_name: 'Ana' } },
     ]
     const { client } = makeMockClient({ room: { data: room, error: null }, members: { data: members, error: null } })
 
     const result = await getRoomHandler({ supabase: client, roomId: 'r1' })
 
-    expect(result).toEqual({ room, members })
+    expect(result.room).toEqual(room)
+    expect(result.members).toEqual([
+      { user_id: 'user-1', role: 'owner', joined_at: '2026-05-17T12:00:00Z', display_name: 'Pepe' },
+      { user_id: 'user-2', role: 'member', joined_at: '2026-05-17T13:00:00Z', display_name: 'Ana' },
+    ])
   })
 
   it('throws RoomNotFoundError when no room matches the id', async () => {

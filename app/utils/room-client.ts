@@ -3,7 +3,7 @@ import type { JoinPayload } from '../../shared/schemas/join.schema'
 import type {
   Room,
   RoomListItem,
-  RoomMember,
+  RoomMemberView,
   RoomPreview,
 } from '../../shared/types/rooms'
 
@@ -22,8 +22,8 @@ export function makeRoomClient(fetchImpl: typeof $fetch) {
       return rooms
     },
 
-    async getRoom(id: string): Promise<{ room: Room; members: RoomMember[] }> {
-      return fetchImpl<{ room: Room; members: RoomMember[] }>(`/api/rooms/${id}`)
+    async getRoom(id: string): Promise<{ room: Room, members: RoomMemberView[] }> {
+      return fetchImpl<{ room: Room, members: RoomMemberView[] }>(`/api/rooms/${id}`)
     },
 
     async previewByCode(code: string): Promise<RoomPreview> {
