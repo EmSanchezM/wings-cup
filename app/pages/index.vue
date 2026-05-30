@@ -97,24 +97,24 @@ const steps = [
         >
           <div class="mb-4 flex items-center justify-between text-xs">
             <span class="inline-flex items-center gap-1 font-semibold text-destructive">
-              <span class="size-2 rounded-full bg-destructive" /> EN VIVO
+              <span class="size-2 rounded-full bg-destructive" /> EN VIVO · Grupo B
             </span>
             <span class="text-muted-foreground">75'</span>
           </div>
           <div class="flex items-center justify-between rounded-xl bg-secondary/40 px-4 py-5">
             <div class="flex flex-col items-center gap-2">
               <span class="size-9 rounded-full bg-muted" />
-              <span class="text-sm font-semibold">RMA</span>
+              <span class="text-sm font-semibold">ARG</span>
             </div>
             <span class="text-3xl font-bold tracking-widest">2 - 1</span>
             <div class="flex flex-col items-center gap-2">
               <span class="size-9 rounded-full bg-muted" />
-              <span class="text-sm font-semibold">FCB</span>
+              <span class="text-sm font-semibold">CHI</span>
             </div>
           </div>
           <div class="mt-4 flex items-center justify-between rounded-xl border border-border px-4 py-4 text-sm">
-            <span class="text-muted-foreground">MAÑANA · 20:00</span>
-            <span class="font-medium">ARG <span class="text-muted-foreground">vs</span> FRA</span>
+            <span class="text-muted-foreground">Grupo C · 18 JUN</span>
+            <span class="font-medium">BRA <span class="text-muted-foreground">vs</span> COL</span>
           </div>
         </div>
       </section>
