@@ -4,9 +4,9 @@ import type { Database } from '../../../shared/types/database.types'
 import { createRoomHandler } from '../../../server/handlers/create-room'
 import { InviteCodeCollisionError } from '../../../server/utils/invite-code'
 
-type LookupResult = { data: { invite_code: string } | null; error: null }
+type LookupResult = { data: { invite_code: string } | null, error: null }
 type InsertResult = { error: { message: string } | null }
-type RefetchResult = { data: Record<string, unknown> | null; error: { message: string } | null }
+type RefetchResult = { data: Record<string, unknown> | null, error: { message: string } | null }
 
 interface MockOptions {
   inviteCodeLookups?: LookupResult[]
@@ -83,6 +83,33 @@ describe('createRoomHandler (R-ROOMS-01, R-ROOMS-04, R-ROOMS-05, R-ROOMS-06)', (
     })
     expect(typeof inserted.invite_code).toBe('string')
     expect(inserted.invite_code).toMatch(/^[A-Z0-9]{6}$/)
+  })
+
+  it('inserts the provided scoring_rules from the body', async () => {
+    const { client, spies } = makeMockClient()
+    const rules = { exact_score: 10, correct_goal_diff: 4, correct_result: 2, wrong: 0 }
+    await createRoomHandler({
+      supabase: client,
+      userId: 'user-1',
+      body: { name: 'Reglas', prize_description: '', scoring_rules: rules },
+    })
+    const inserted = spies.insert.mock.calls[0][0] as Record<string, unknown>
+    expect(inserted.scoring_rules).toEqual(rules)
+  })
+
+  it('falls back to the default scoring_rules when the body omits them', async () => {
+    const { client, spies } = makeMockClient()
+    await createRoomHandler({
+      supabase: client,
+      userId: 'user-1',
+      body: { name: 'Sin reglas', prize_description: '' },
+    })
+    const inserted = spies.insert.mock.calls[0][0] as Record<string, unknown>
+    expect(inserted.scoring_rules).toMatchObject({
+      exact_score: 5,
+      correct_goal_diff: 3,
+      correct_result: 1,
+    })
   })
 
   it('passes an empty prize_description through to the insert', async () => {

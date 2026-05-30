@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { createRoomSchema } from '../../shared/schemas/room.schema'
+import { defaultScoringRules } from '../../shared/schemas/scoring-rules.schema'
 
 describe('createRoomSchema (R-ROOMS-07)', () => {
   it('accepts a minimal valid payload', () => {
@@ -61,5 +62,42 @@ describe('createRoomSchema (R-ROOMS-07)', () => {
         prize_description: 'x'.repeat(501),
       }),
     ).toThrow()
+  })
+
+  // --- scoring_rules (wizard step 3) ---
+
+  it('accepts custom scoring_rules', () => {
+    const result = createRoomSchema.parse({
+      name: 'OK',
+      scoring_rules: { exact_score: 10, correct_goal_diff: 4, correct_result: 2 },
+    })
+    expect(result.scoring_rules).toMatchObject({
+      exact_score: 10,
+      correct_goal_diff: 4,
+      correct_result: 2,
+      wrong: 0,
+    })
+  })
+
+  it('leaves scoring_rules undefined when omitted (handler applies the default)', () => {
+    const result = createRoomSchema.parse({ name: 'OK' })
+    expect(result.scoring_rules).toBeUndefined()
+  })
+
+  it('rejects negative scoring values', () => {
+    expect(() =>
+      createRoomSchema.parse({
+        name: 'OK',
+        scoring_rules: { exact_score: -1, correct_goal_diff: 3, correct_result: 1 },
+      }),
+    ).toThrow()
+  })
+
+  it('keeps the suggested defaults in sync (exact 5 / diff 3 / result 1)', () => {
+    expect(defaultScoringRules).toMatchObject({
+      exact_score: 5,
+      correct_goal_diff: 3,
+      correct_result: 1,
+    })
   })
 })

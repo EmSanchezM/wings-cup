@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '../../shared/types/database.types'
 import type { Room } from '../../shared/types/rooms'
 import type { CreateRoomInput } from '../../shared/schemas/room.schema'
+import { defaultScoringRules } from '../../shared/schemas/scoring-rules.schema'
 import { generateInviteCode } from '../utils/invite-code'
 
 export interface CreateRoomDeps {
@@ -24,6 +25,7 @@ export async function createRoomHandler(deps: CreateRoomDeps): Promise<{ room: R
     .insert({
       name: deps.body.name,
       prize_description: deps.body.prize_description,
+      scoring_rules: deps.body.scoring_rules ?? defaultScoringRules,
       invite_code,
       created_by: deps.userId,
     })

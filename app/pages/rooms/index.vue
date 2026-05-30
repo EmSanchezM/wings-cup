@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { LayoutGrid, PlusCircle, Trophy, Copy, Check } from 'lucide-vue-next'
+import { LayoutGrid, Trophy, Copy, Check } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { createRoomSchema } from '~~/shared/schemas/room.schema'
+import type { CreateRoomInput } from '~~/shared/schemas/room.schema'
 import type { RoomListItem } from '~~/shared/types/rooms'
 
 // Auth enforced by @nuxtjs/supabase redirectOptions (covers /rooms/**)
@@ -14,9 +14,6 @@ const router = useRouter()
 const rooms = ref<RoomListItem[]>([])
 const isLoading = ref(false)
 const error = ref<string | null>(null)
-
-const name = ref('')
-const prizeDescription = ref('')
 const isSubmitting = ref(false)
 
 async function loadRooms() {
@@ -35,11 +32,9 @@ async function loadRooms() {
   }
 }
 
-async function handleCreate() {
-  const parsed = createRoomSchema.safeParse({
-    name: name.value,
-    prize_description: prizeDescription.value,
-  })
+// The wizard emits the full payload (name + prize + scoring_rules).
+async function handleCreate(payload: CreateRoomInput) {
+  const parsed = createRoomSchema.safeParse(payload)
   if (!parsed.success) {
     error.value = parsed.error.issues[0]?.message ?? 'Datos inválidos'
     return
@@ -100,42 +95,10 @@ onMounted(loadRooms)
         </div>
       </header>
 
-      <section class="space-y-4 rounded-2xl border border-border bg-card p-6 shadow-xl">
-        <div class="flex items-center gap-2.5">
-          <span class="flex size-9 items-center justify-center rounded-full bg-primary/10 text-primary">
-            <PlusCircle class="size-5" />
-          </span>
-          <h2 class="text-sm font-semibold">
-            Crear sala
-          </h2>
-        </div>
-        <form
-          class="space-y-3"
-          @submit.prevent="handleCreate"
-        >
-          <Input
-            v-model="name"
-            placeholder="Nombre (ej. Amigos del fútbol)"
-            maxlength="100"
-            required
-            :disabled="isSubmitting"
-          />
-          <Input
-            v-model="prizeDescription"
-            placeholder="Premio (opcional — ej. Una birra para el ganador)"
-            maxlength="500"
-            :disabled="isSubmitting"
-          />
-          <Button
-            type="submit"
-            size="lg"
-            class="w-full"
-            :disabled="isSubmitting || !name.trim()"
-          >
-            {{ isSubmitting ? 'Creando…' : 'Crear sala' }}
-          </Button>
-        </form>
-      </section>
+      <CreateRoomWizard
+        :submitting="isSubmitting"
+        @submit="handleCreate"
+      />
 
       <section class="space-y-4">
         <h2 class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
