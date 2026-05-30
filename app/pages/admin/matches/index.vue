@@ -23,7 +23,7 @@ const lockingNow = ref(false)
 const lockedCount = ref<number | null>(null)
 
 async function ensureSuperAdmin() {
-  const { isSuperAdmin, reason } = await $fetch<{
+  const { reason } = await $fetch<{
     isSuperAdmin: boolean
     reason: 'authorized' | 'forbidden' | 'unauthenticated'
   }>('/api/me/is-super-admin')
