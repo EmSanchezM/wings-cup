@@ -118,7 +118,7 @@ onMounted(async () => {
         </p>
       </header>
 
-      <section class="flex items-center gap-3 rounded-lg border p-4">
+      <section class="flex flex-wrap items-center gap-3 rounded-xl border bg-card p-4">
         <Button
           :disabled="lockingNow"
           variant="default"
@@ -136,7 +136,7 @@ onMounted(async () => {
 
       <p
         v-if="saveError"
-        class="text-sm text-destructive"
+        class="rounded-md border border-destructive/40 bg-destructive/10 p-2 text-sm text-destructive"
         role="alert"
       >
         {{ saveError }}
@@ -161,14 +161,39 @@ onMounted(async () => {
           <li
             v-for="match in matchesState.data.value"
             :key="match.id"
-            class="rounded-lg border p-3 space-y-2"
+            data-testid="admin-match-row"
+            class="space-y-3 rounded-xl border bg-card p-4"
           >
-            <div class="flex flex-wrap items-baseline justify-between gap-3 text-sm">
-              <span class="font-medium">
-                {{ match.home_team }} vs {{ match.away_team }}
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <span class="flex items-center gap-2 text-sm font-medium">
+                <TeamFlag
+                  :team="match.home_team"
+                  :size="22"
+                />
+                {{ match.home_team }}
+                <span class="text-xs text-muted-foreground">vs</span>
+                {{ match.away_team }}
+                <TeamFlag
+                  :team="match.away_team"
+                  :size="22"
+                />
               </span>
-              <span class="text-xs text-muted-foreground">
-                {{ match.stage }}<span v-if="match.group_name"> · Grupo {{ match.group_name }}</span> · {{ new Date(match.kickoff_at).toLocaleString() }}
+              <span class="flex items-center gap-2">
+                <span
+                  data-testid="admin-status-badge"
+                  class="inline-flex items-center rounded-md border border-transparent px-2 py-0.5 text-xs font-medium"
+                  :class="{
+                    'bg-secondary text-secondary-foreground': match.status === 'scheduled',
+                    'bg-destructive text-destructive-foreground': match.status === 'live',
+                    'border-border text-muted-foreground': match.status === 'finished',
+                    'bg-accent text-accent-foreground': match.status === 'postponed',
+                  }"
+                >
+                  {{ match.status }}
+                </span>
+                <span class="text-xs text-muted-foreground">
+                  {{ match.stage }}<span v-if="match.group_name"> · Grupo {{ match.group_name }}</span> · {{ new Date(match.kickoff_at).toLocaleString() }}
+                </span>
               </span>
             </div>
 
@@ -177,8 +202,8 @@ onMounted(async () => {
               class="flex items-center justify-between"
             >
               <span class="text-sm text-muted-foreground">
-                Estado: {{ match.status }} · Marcador:
-                {{ match.home_score ?? '–' }} - {{ match.away_score ?? '–' }}
+                Marcador:
+                <span class="font-mono font-semibold text-foreground">{{ match.home_score ?? '–' }} - {{ match.away_score ?? '–' }}</span>
               </span>
               <Button
                 variant="outline"
@@ -196,12 +221,20 @@ onMounted(async () => {
             >
               <select
                 v-model="editDrafts[match.id]!.status"
-                class="rounded-md border px-2 py-1 text-sm"
+                class="rounded-md border border-input bg-background px-2 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               >
-                <option value="scheduled">scheduled</option>
-                <option value="live">live</option>
-                <option value="finished">finished</option>
-                <option value="postponed">postponed</option>
+                <option value="scheduled">
+                  scheduled
+                </option>
+                <option value="live">
+                  live
+                </option>
+                <option value="finished">
+                  finished
+                </option>
+                <option value="postponed">
+                  postponed
+                </option>
               </select>
               <Input
                 v-model.number="editDrafts[match.id]!.home_score"
