@@ -48,9 +48,12 @@ export default defineNuxtConfig({
   },
 
   supabase: {
-    // @nuxtjs/supabase v2 reads NUXT_PUBLIC_SUPABASE_URL and NUXT_PUBLIC_SUPABASE_KEY from env directly.
-    // We do NOT mirror them into runtimeConfig.public to avoid duplication.
     useSsrCookies: true,
+    clientOptions: {
+      auth: {
+        detectSessionInUrl: false,
+      },
+    },
     redirectOptions: {
       login: '/auth/login',
       callback: '/auth/confirm',

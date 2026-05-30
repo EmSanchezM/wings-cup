@@ -2,8 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '../../shared/types/database.types'
 import type { MatchListItem } from '../../shared/types/matches'
 
-const MATCH_LIST_COLUMNS =
-  'id, external_id, home_team, away_team, stage, group_name, kickoff_at, status, home_score, away_score'
+const MATCH_LIST_COLUMNS = 'id, external_id, home_team, away_team, stage, group_name, kickoff_at, status, home_score, away_score'
 
 export interface ListMatchesFilters {
   stage?: string
