@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { LayoutGrid, PlusCircle, Trophy, Copy, Check } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
 import { createRoomSchema } from '~~/shared/schemas/room.schema'
 import type { RoomListItem } from '~~/shared/types/rooms'
 
@@ -63,25 +65,50 @@ function inviteUrl(code: string): string {
   return `${window.location.origin}/join/${code}`
 }
 
+// Copy-to-clipboard for invite links — transient per-room "copied" feedback.
+const copiedCode = ref<string | null>(null)
+async function copyInvite(code: string) {
+  try {
+    await navigator.clipboard.writeText(inviteUrl(code))
+    copiedCode.value = code
+    setTimeout(() => {
+      if (copiedCode.value === code) copiedCode.value = null
+    }, 2000)
+  }
+  catch {
+    // Clipboard unavailable (insecure context / denied) — silently no-op.
+  }
+}
+
 onMounted(loadRooms)
 </script>
 
 <template>
   <div class="min-h-screen p-4 sm:p-8">
-    <div class="mx-auto w-full max-w-2xl space-y-8">
-      <header class="space-y-1">
-        <h1 class="text-2xl font-bold tracking-tight">
-          Salas
-        </h1>
-        <p class="text-sm text-muted-foreground">
-          Creá una sala o entrá a las que sos miembro.
-        </p>
+    <div class="mx-auto w-full max-w-3xl space-y-8">
+      <header class="flex items-start gap-4">
+        <span class="hidden size-12 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary sm:flex">
+          <LayoutGrid class="size-6" />
+        </span>
+        <div class="space-y-1">
+          <h1 class="text-3xl font-bold tracking-tight sm:text-4xl">
+            Tus <span class="text-primary">Salas</span>
+          </h1>
+          <p class="text-sm text-muted-foreground sm:text-base">
+            Creá una sala o entrá a las que sos miembro.
+          </p>
+        </div>
       </header>
 
-      <section class="space-y-3 rounded-lg border p-4">
-        <h2 class="text-sm font-semibold">
-          Crear sala
-        </h2>
+      <section class="space-y-4 rounded-2xl border border-border bg-card p-6 shadow-xl">
+        <div class="flex items-center gap-2.5">
+          <span class="flex size-9 items-center justify-center rounded-full bg-primary/10 text-primary">
+            <PlusCircle class="size-5" />
+          </span>
+          <h2 class="text-sm font-semibold">
+            Crear sala
+          </h2>
+        </div>
         <form
           class="space-y-3"
           @submit.prevent="handleCreate"
@@ -101,6 +128,7 @@ onMounted(loadRooms)
           />
           <Button
             type="submit"
+            size="lg"
             class="w-full"
             :disabled="isSubmitting || !name.trim()"
           >
@@ -109,8 +137,8 @@ onMounted(loadRooms)
         </form>
       </section>
 
-      <section class="space-y-3">
-        <h2 class="text-sm font-semibold">
+      <section class="space-y-4">
+        <h2 class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           Tus salas
         </h2>
 
@@ -121,42 +149,72 @@ onMounted(loadRooms)
           Cargando…
         </p>
 
-        <p
+        <div
           v-else-if="rooms.length === 0"
-          class="text-sm text-muted-foreground"
+          class="space-y-4 rounded-2xl border border-dashed border-border bg-card p-10 text-center"
         >
-          Todavía no participás en ninguna sala. Creá una arriba o pedí a alguien que te invite.
-        </p>
+          <span class="mx-auto flex size-12 items-center justify-center rounded-full bg-secondary text-muted-foreground">
+            <LayoutGrid class="size-6" />
+          </span>
+          <p class="text-sm text-muted-foreground">
+            Todavía no participás en ninguna sala. Creá una arriba o pedí a alguien que te invite.
+          </p>
+        </div>
 
         <ul
           v-else
-          class="space-y-2"
+          class="grid gap-4 sm:grid-cols-2"
         >
           <li
             v-for="room in rooms"
             :key="room.id"
-            class="rounded-lg border p-4 space-y-2"
+            class="group flex flex-col gap-3 rounded-2xl border border-border bg-card p-5 shadow-xl transition-colors hover:border-primary/40"
           >
-            <div class="flex items-baseline justify-between gap-3">
+            <div class="flex items-start justify-between gap-3">
               <NuxtLink
                 :to="`/rooms/${room.id}`"
-                class="font-medium hover:underline"
+                class="text-base font-semibold tracking-tight transition-colors group-hover:text-primary"
               >
                 {{ room.name }}
               </NuxtLink>
-              <span class="text-xs font-mono text-muted-foreground">
+              <Badge
+                variant="outline"
+                class="shrink-0 font-mono"
+              >
                 {{ room.invite_code }}
-              </span>
+              </Badge>
             </div>
+
             <p
               v-if="room.prize_description"
-              class="text-sm text-muted-foreground"
+              class="flex items-center gap-1.5 text-sm text-muted-foreground"
             >
-              Premio: {{ room.prize_description }}
+              <Trophy class="size-4 shrink-0 text-accent" />
+              <span class="truncate">{{ room.prize_description }}</span>
             </p>
-            <p class="text-xs text-muted-foreground break-all">
-              Link de invitación: <span class="font-mono">{{ inviteUrl(room.invite_code) }}</span>
-            </p>
+
+            <div class="mt-auto flex items-center gap-2 rounded-lg bg-secondary/40 px-3 py-2">
+              <span class="min-w-0 flex-1 truncate font-mono text-xs text-muted-foreground">
+                {{ inviteUrl(room.invite_code) }}
+              </span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                class="size-7 shrink-0"
+                :aria-label="copiedCode === room.invite_code ? 'Link copiado' : 'Copiar link de invitación'"
+                @click="copyInvite(room.invite_code)"
+              >
+                <Check
+                  v-if="copiedCode === room.invite_code"
+                  class="size-4 text-primary"
+                />
+                <Copy
+                  v-else
+                  class="size-4"
+                />
+              </Button>
+            </div>
           </li>
         </ul>
       </section>
