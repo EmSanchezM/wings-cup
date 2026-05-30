@@ -54,19 +54,19 @@
 ## B40 — Semantic token set + dark base (RED → GREEN)
 **Satisfies**: R-DS-01, R-DS-02, R-DS-03 · **Files**: `tests/unit/design-tokens.test.ts`, `app/assets/css/tailwind.css`
 
-- [ ] T-110: [RED] `tests/unit/design-tokens.test.ts` — assert 19 `--color-*` tokens present + `oklch(`; `body` base rule sets bg/fg; `--color-primary` preserved.
-- [ ] T-111: [GREEN] Extend `@theme` with full OKLCH dark set per `design.md` §2 + `@layer base` body + default border-color.
-- [ ] T-112: [REFACTOR] Confirm `Button`/`Input` utilities resolve; grep semantic utilities vs defined tokens — no orphans.
+- [x] T-110: [RED] `tests/unit/design-tokens.test.ts` — assert 19 `--color-*` tokens present + `oklch(`; `body` base rule sets bg/fg; `--color-primary` preserved.
+- [x] T-111: [GREEN] Extend `@theme` with full OKLCH dark set per `design.md` §2 + `@layer base` body + default border-color.
+- [x] T-112: [REFACTOR] Confirm `Button`/`Input` utilities resolve; grep semantic utilities vs defined tokens — no orphans.
 
 ## B41 — Badge primitive (RED → GREEN)
 **Satisfies**: R-DS-04 · **Files**: `tests/nuxt/badge.nuxt.test.ts`, `app/components/ui/badge/{index.ts,Badge.vue}`
 
-- [ ] T-113: [RED] `tests/nuxt/badge.nuxt.test.ts` — renders slot; `destructive`/`accent` variants apply token classes.
-- [ ] T-114: [GREEN] `badge/index.ts` (`cva`: default/secondary/destructive/outline/accent) + `Badge.vue` (`cn` wrapper).
+- [x] T-113: [RED] `tests/nuxt/badge.nuxt.test.ts` — renders slot; `destructive`/`accent` variants apply token classes.
+- [x] T-114: [GREEN] `badge/index.ts` (`cva`: default/secondary/destructive/outline/accent) + `Badge.vue` (`cn` wrapper).
 
 ## B-PR1 — Wrap-up
-- [ ] T-115: [CHORE] `pnpm test:unit` + `pnpm test:nuxt` green; `vue-tsc` clean.
-- [ ] T-116: [CHORE] Work-unit commits (B40, B41); open PR 1 → `main`.
+- [x] T-115: [CHORE] `pnpm test:unit` (210/210) + `pnpm test:nuxt` (49/49) green; `vue-tsc` clean.
+- [x] T-116: [CHORE] Work-unit commits (B40, B41) done. ⏳ Push + open PR 1 → `main` pending user confirmation.
 
 ---
 
