@@ -24,7 +24,8 @@ Reference mockups are **light theme**; user confirmed **dark wins** — we adopt
 | Mockup element | Decision |
 |----------------|----------|
 | Odds / cuotas (L/E/V) | **Dropped** — we are exact-score prediction, not betting; no such data |
-| Team crests | **Initials placeholder** — `home_team`/`away_team` are strings, no logo URLs |
+| Country flags (national teams) | **Included** — vendored circle-flags SVGs in `public/flags/`, resolved by name→ISO map via `<TeamFlag>`, initials fallback for knockout placeholders (R-DS-05). Distinct from club crests: flags are a finite, license-free, name-derivable set. |
+| Club crests | **N/A** — not applicable to a national-team World Cup |
 | Ranking avatars | **Initials in circle** — only `display_name` exists |
 | Trend arrows (↑↓), "Aciertos: N" | **Deferred** — needs new backend (position history, hit count) → future proposal |
 | Premios del Grupo (pozo, Farolito) | **Deferred** — no money/prize concept exists → future proposal |
@@ -133,7 +134,7 @@ Per-PR revert. Token PR is additive (defines previously-undefined utilities). No
 1. Visual identity = **Estadio nocturno (dark)**. Confirmed twice by user (kept dark even against light mockups).
 2. **Dark only** — no light theme, no toggle.
 3. Tokens in existing `@theme` as `--color-*` OKLCH (Tailwind v4 convention already in use).
-4. Adopt mockup **layouts**, not their light palette; **adapt to real data** — odds dropped, crests/avatars → initials, prizes/trends/hit-counts deferred.
+4. Adopt mockup **layouts**, not their light palette; **adapt to real data** — odds dropped, club crests N/A, **national-team flags INCLUDED** (vendored `public/flags/` + `<TeamFlag>`, R-DS-05), player avatars → initials, prizes/trends/hit-counts deferred.
 5. Scope = **visual + small extras**: derived data + a leaderboard fetch (predictions) + `useSupabaseUser` (leaderboard) allowed; **no backend/schema**.
 6. **Per-card save preserved** (no global "Guardar Cambios").
 7. `MatchPredictionCard` + admin = **script-invariant** (template only). `predictions.vue` + `leaderboard.vue` = restyle + read-only derived additions.

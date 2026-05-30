@@ -10,6 +10,7 @@ NEW capability domain: `design-system`. Defines the semantic token contract and 
 | R-DS-02 | Estadio Nocturno Dark Theme Applied App-Wide | NEW | 3 |
 | R-DS-03 | shadcn Components Resolve Token Colors | NEW | 2 |
 | R-DS-04 | Status Color Mapping via Badge | NEW | 3 |
+| R-DS-05 | Country Flags via TeamFlag | NEW | 4 |
 
 ---
 
@@ -113,3 +114,37 @@ A `Badge` component MUST exist under `app/components/ui/badge/`, built in the sh
 - GIVEN the `badgeVariants` definition
 - WHEN inspecting its `variant` keys
 - THEN an `accent` variant is present mapping to `bg-accent` / `text-accent-foreground`
+
+---
+
+### R-DS-05: Country Flags via TeamFlag
+**Type**: NEW | **Source**: User request — real World Cup country flags (upgrades the deferred "initials placeholder" decision)
+**Files**: `public/flags/*.svg`, `shared/constants/team-flags.ts`, `app/components/TeamFlag.vue`
+
+Country flags MUST be served as vendored static SVGs under `public/flags/{code}.svg` (circle-flags, MIT — no runtime dependency, no external CDN at runtime). A single source-of-truth map `shared/constants/team-flags.ts` MUST map each participant country NAME (exactly as stored in `matches.home_team`/`away_team`) to its ISO 3166-1 alpha-2 code (England uses the `gb-eng` subdivision). A `TeamFlag` component MUST render the circular flag `<img>` (with `alt`) for a known country and MUST fall back to an initials `<span>` for any name without a flag (knockout placeholders like "Group A Winner", "Winner Match 49", "Loser Match 61", or unknown names). This applies to TEAMS only (landing preview, predictions card, admin list); player avatars in the leaderboard remain initials.
+
+#### Scenario: Map covers all group-stage participants
+
+- GIVEN `shared/constants/team-flags.ts`
+- WHEN inspecting `TEAM_FLAG_CODES`
+- THEN every one of the 32 group-stage country names from the seed has an ISO code
+- AND a corresponding `public/flags/{code}.svg` asset exists
+
+#### Scenario: Known country renders a flag image
+
+- GIVEN `<TeamFlag team="Argentina" />`
+- WHEN rendered
+- THEN it renders an `<img>` with `src="/flags/ar.svg"` and `alt="Argentina"`
+
+#### Scenario: Knockout placeholder falls back to initials
+
+- GIVEN `<TeamFlag team="Group A Winner" />`
+- WHEN rendered
+- THEN no `<img>` is rendered
+- AND an initials fallback ("GA") is shown
+
+#### Scenario: No runtime flag dependency
+
+- GIVEN `package.json` after this change
+- WHEN inspecting dependencies
+- THEN no flag npm package was added (flags are vendored static assets)

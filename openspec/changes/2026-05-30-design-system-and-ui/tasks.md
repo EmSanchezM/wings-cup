@@ -42,6 +42,7 @@
 |-------------|--------|
 | R-DS-01, R-DS-02, R-DS-03 (token set, dark, shadcn resolves) | B40 |
 | R-DS-04 (Badge) | B41 |
+| R-DS-05 (flags + TeamFlag) | B48 |
 | R-UX-06 (landing + Cómo Funciona) | B42 |
 | R-UX-07 (predictions visual + points sidebar) | B43, B44 |
 | R-UX-08 (admin visual + Select) | B46, B47 |
@@ -75,10 +76,24 @@
 ## B42 — Landing page (RED → GREEN)
 **Satisfies**: R-UX-06 · **Files**: `tests/nuxt/landing.nuxt.test.ts`, `app/pages/index.vue`
 
-- [ ] T-117: [RED] `tests/nuxt/landing.nuxt.test.ts` — "Wings Cup" + tagline present; CTA link `to="/auth/login"`; Cómo Funciona has 3 steps; not the bare placeholder.
-- [ ] T-118: [GREEN] Rewrite `index.vue` per `design.md` §4 — dark hero (badge pill, headline w/ emerald span, value prop, dual CTA, social proof, static preview card), Cómo Funciona (3 token cards + CTA), footer; SSR-safe year.
-- [ ] T-119: [REFACTOR] Responsive (mobile stacks, desktop two-col hero); emerald CTA contrast sanity.
-- [ ] T-120: [CHORE] Tests green; `vue-tsc` clean; commit + open PR 2 → PR1.
+- [x] T-117: [RED] `tests/nuxt/landing.nuxt.test.ts` — "Wings Cup" + tagline present; CTA link `to="/auth/login"`; Cómo Funciona has 3 steps; not the bare placeholder.
+- [x] T-118: [GREEN] Rewrite `index.vue` per `design.md` §4 — dark hero (badge pill, headline w/ emerald span, value prop, dual CTA, honest social-proof line, static preview card), Cómo Funciona (3 token cards + CTA), footer; SSR-safe year. (Fake "10k+ ligas" metric dropped — honesty.)
+- [x] T-119: [REFACTOR] Responsive (mobile stacks, desktop two-col hero); emerald CTA contrast sanity.
+- [x] T-120: [CHORE] Tests green (unit 210, nuxt 53); `vue-tsc` clean; commit done. ⏳ Push + open PR 2 pending user confirmation.
+
+---
+
+# ── Flags addition (folded into PR 2 — user request) ──
+
+## B48 — Country flags + TeamFlag (RED → GREEN) ✅
+**Satisfies**: R-DS-05 · **Files**: `public/flags/*.svg`, `shared/constants/team-flags.ts`, `app/components/TeamFlag.vue`, `tests/unit/team-flags.test.ts`, `tests/nuxt/team-flag.nuxt.test.ts`
+
+- [x] T-138: [CHORE] Vendor 32 circle-flags SVGs (MIT) → `public/flags/{iso2}.svg` (jsdelivr; England = `gb-eng`).
+- [x] T-139: [RED] `tests/unit/team-flags.test.ts` (5) — name→code map, `/flags` path, England subdivision, knockout→null, initials.
+- [x] T-140: [GREEN] `shared/constants/team-flags.ts` — `TEAM_FLAG_CODES` + `flagCode`/`flagSrc`/`teamInitials`.
+- [x] T-141: [RED] `tests/nuxt/team-flag.nuxt.test.ts` (2) — known country → `<img>`; knockout → initials fallback.
+- [x] T-142: [GREEN] `app/components/TeamFlag.vue` — circular flag img + initials `<span>` fallback.
+- [x] T-143: [GREEN] Wire `<TeamFlag>` into landing preview card (ARG/CHI + BRA/COL). Reused by predictions (B43) and admin (B47).
 
 ---
 
