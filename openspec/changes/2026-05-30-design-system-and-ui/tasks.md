@@ -75,10 +75,10 @@
 ## B42 — Landing page (RED → GREEN)
 **Satisfies**: R-UX-06 · **Files**: `tests/nuxt/landing.nuxt.test.ts`, `app/pages/index.vue`
 
-- [ ] T-117: [RED] `tests/nuxt/landing.nuxt.test.ts` — "Wings Cup" + tagline present; CTA link `to="/auth/login"`; Cómo Funciona has 3 steps; not the bare placeholder.
-- [ ] T-118: [GREEN] Rewrite `index.vue` per `design.md` §4 — dark hero (badge pill, headline w/ emerald span, value prop, dual CTA, social proof, static preview card), Cómo Funciona (3 token cards + CTA), footer; SSR-safe year.
-- [ ] T-119: [REFACTOR] Responsive (mobile stacks, desktop two-col hero); emerald CTA contrast sanity.
-- [ ] T-120: [CHORE] Tests green; `vue-tsc` clean; commit + open PR 2 → PR1.
+- [x] T-117: [RED] `tests/nuxt/landing.nuxt.test.ts` — "Wings Cup" + tagline present; CTA link `to="/auth/login"`; Cómo Funciona has 3 steps; not the bare placeholder.
+- [x] T-118: [GREEN] Rewrite `index.vue` per `design.md` §4 — dark hero (badge pill, headline w/ emerald span, value prop, dual CTA, honest social-proof line, static preview card), Cómo Funciona (3 token cards + CTA), footer; SSR-safe year. (Fake "10k+ ligas" metric dropped — honesty.)
+- [x] T-119: [REFACTOR] Responsive (mobile stacks, desktop two-col hero); emerald CTA contrast sanity.
+- [x] T-120: [CHORE] Tests green (unit 210, nuxt 53); `vue-tsc` clean; commit done. ⏳ Push + open PR 2 pending user confirmation.
 
 ---
 
