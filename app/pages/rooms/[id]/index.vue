@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { Trophy, Users, Flag, BarChart3, Copy, Check } from 'lucide-vue-next'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import type { Room, RoomMember } from '~~/shared/types/rooms'
 
 // Auth enforced by @nuxtjs/supabase redirectOptions (covers /rooms/**)
@@ -11,6 +14,24 @@ const room = ref<Room | null>(null)
 const members = ref<RoomMember[]>([])
 const isLoading = ref(true)
 const error = ref<string | null>(null)
+
+const copied = ref(false)
+async function copyCode(code: string) {
+  try {
+    await navigator.clipboard.writeText(code)
+    copied.value = true
+    setTimeout(() => {
+      copied.value = false
+    }, 2000)
+  }
+  catch {
+    // Clipboard unavailable — silently no-op.
+  }
+}
+
+function memberInitials(userId: string): string {
+  return userId.replace(/[^a-z0-9]/gi, '').slice(0, 2).toUpperCase() || '··'
+}
 
 onMounted(async () => {
   try {
@@ -47,61 +68,116 @@ onMounted(async () => {
       </p>
 
       <template v-else-if="room">
-        <header class="space-y-2">
+        <header class="space-y-4">
           <NuxtLink
             to="/rooms"
-            class="text-xs text-muted-foreground hover:underline"
+            class="inline-flex items-center text-xs text-muted-foreground transition-colors hover:text-foreground"
           >
             ← Volver a Salas
           </NuxtLink>
-          <h1 class="text-2xl font-bold tracking-tight">
-            {{ room.name }}
-          </h1>
-          <p
-            v-if="room.prize_description"
-            class="text-sm text-muted-foreground"
-          >
-            Premio: {{ room.prize_description }}
-          </p>
-          <p class="text-xs font-mono text-muted-foreground">
-            Código de invitación: {{ room.invite_code }}
-          </p>
+          <div class="flex items-start justify-between gap-3">
+            <div class="space-y-1">
+              <h1 class="text-3xl font-bold tracking-tight sm:text-4xl">
+                {{ room.name }}
+              </h1>
+              <p
+                v-if="room.prize_description"
+                class="flex items-center gap-1.5 text-sm text-muted-foreground"
+              >
+                <Trophy class="size-4 shrink-0 text-accent" />
+                {{ room.prize_description }}
+              </p>
+            </div>
+            <Badge
+              variant="outline"
+              class="shrink-0 font-mono"
+            >
+              {{ room.invite_code }}
+            </Badge>
+          </div>
+
+          <!-- Invite code with copy -->
+          <div class="flex items-center gap-2 rounded-xl bg-secondary/40 px-3 py-2">
+            <span class="text-xs text-muted-foreground">Código de invitación</span>
+            <span class="font-mono text-sm font-semibold">{{ room.invite_code }}</span>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              class="ml-auto size-7"
+              :aria-label="copied ? 'Copiado' : 'Copiar código'"
+              @click="copyCode(room.invite_code)"
+            >
+              <Check
+                v-if="copied"
+                class="size-4 text-primary"
+              />
+              <Copy
+                v-else
+                class="size-4"
+              />
+            </Button>
+          </div>
         </header>
 
-        <section class="space-y-3 rounded-lg border p-4">
-          <h2 class="text-sm font-semibold">
-            Miembros ({{ members.length }})
-          </h2>
+        <!-- Members -->
+        <section class="space-y-4 rounded-2xl border border-border bg-card p-5 shadow-xl">
+          <div class="flex items-center gap-2.5">
+            <span class="flex size-9 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <Users class="size-5" />
+            </span>
+            <h2 class="text-sm font-semibold">
+              Miembros <span class="text-muted-foreground">({{ members.length }})</span>
+            </h2>
+          </div>
           <ul class="space-y-1">
             <li
               v-for="member in members"
               :key="member.user_id"
-              class="text-sm text-muted-foreground flex items-center justify-between"
+              class="flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-secondary/40"
             >
-              <span class="font-mono text-xs">{{ member.user_id }}</span>
-              <span class="text-xs uppercase">{{ member.role }}</span>
+              <span class="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-semibold text-secondary-foreground">
+                {{ memberInitials(member.user_id) }}
+              </span>
+              <span class="min-w-0 flex-1 truncate font-mono text-xs text-muted-foreground">
+                {{ member.user_id }}
+              </span>
+              <Badge :variant="member.role === 'owner' ? 'accent' : 'secondary'">
+                {{ member.role === 'owner' ? 'Dueño' : 'Miembro' }}
+              </Badge>
             </li>
           </ul>
         </section>
 
-        <section class="space-y-3 rounded-lg border p-4">
-          <h2 class="text-sm font-semibold">
-            Acciones
-          </h2>
-          <div class="flex flex-col gap-2 sm:flex-row">
-            <NuxtLink
-              :to="`/rooms/${roomId}/predictions`"
-              class="rounded-md border px-4 py-2 text-sm font-medium hover:bg-muted transition-colors text-center"
-            >
-              Mis Predicciones
+        <!-- Actions -->
+        <section class="grid gap-3 sm:grid-cols-2">
+          <Button
+            as-child
+            size="lg"
+            class="h-auto justify-start gap-3 py-4"
+          >
+            <NuxtLink :to="`/rooms/${roomId}/predictions`">
+              <Flag class="size-5" />
+              <span class="flex flex-col items-start">
+                <span class="font-semibold">Mis Predicciones</span>
+                <span class="text-xs font-normal opacity-80">Cargá tus marcadores</span>
+              </span>
             </NuxtLink>
-            <NuxtLink
-              :to="`/rooms/${roomId}/leaderboard`"
-              class="rounded-md border px-4 py-2 text-sm font-medium hover:bg-muted transition-colors text-center"
-            >
-              Tabla de Posiciones
+          </Button>
+          <Button
+            as-child
+            variant="outline"
+            size="lg"
+            class="h-auto justify-start gap-3 py-4"
+          >
+            <NuxtLink :to="`/rooms/${roomId}/leaderboard`">
+              <BarChart3 class="size-5 text-accent" />
+              <span class="flex flex-col items-start">
+                <span class="font-semibold">Tabla de Posiciones</span>
+                <span class="text-xs font-normal text-muted-foreground">Quién va ganando</span>
+              </span>
             </NuxtLink>
-          </div>
+          </Button>
         </section>
       </template>
     </div>

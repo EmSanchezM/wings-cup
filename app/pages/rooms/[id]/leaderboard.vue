@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { Trophy, Medal } from 'lucide-vue-next'
 import { useLeaderboard, applyMemberUpdate } from '~/composables/useLeaderboard'
 import { useMatches } from '~/composables/useMatches'
 import type { RoomMember } from '~~/shared/types/rooms'
@@ -56,7 +57,7 @@ const promedio = computed(() => {
   return avg.toFixed(1)
 })
 const partidosRestantes = computed(
-  () => (matchesData.value ?? []).filter((m) => m.status !== 'finished').length,
+  () => (matchesData.value ?? []).filter(m => m.status !== 'finished').length,
 )
 
 onMounted(() => {
@@ -81,22 +82,29 @@ onUnmounted(() => {
 <template>
   <div class="min-h-screen p-4 sm:p-8">
     <div class="mx-auto w-full max-w-5xl space-y-6">
-      <header class="space-y-1">
+      <header class="space-y-4">
         <NuxtLink
           :to="`/rooms/${roomId}`"
-          class="text-xs text-muted-foreground hover:text-foreground"
+          class="inline-flex items-center text-xs text-muted-foreground transition-colors hover:text-foreground"
         >
           ← Volver a la sala
         </NuxtLink>
-        <h1 class="text-2xl font-bold tracking-tight">
-          Tabla de Posiciones
-        </h1>
-        <p
-          v-if="!pending && !error"
-          class="text-sm text-muted-foreground"
-        >
-          {{ leaderboard.length }} participante<span v-if="leaderboard.length !== 1">s</span>
-        </p>
+        <div class="flex items-start gap-4">
+          <span class="hidden size-12 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent sm:flex">
+            <Trophy class="size-6" />
+          </span>
+          <div class="space-y-1">
+            <h1 class="text-3xl font-bold tracking-tight sm:text-4xl">
+              Tabla de Posiciones
+            </h1>
+            <p
+              v-if="!pending && !error"
+              class="text-sm text-muted-foreground sm:text-base"
+            >
+              {{ leaderboard.length }} participante<span v-if="leaderboard.length !== 1">s</span>
+            </p>
+          </div>
+        </div>
       </header>
 
       <p
@@ -119,9 +127,9 @@ onUnmounted(() => {
         class="grid gap-6 lg:grid-cols-[1fr_280px]"
       >
         <!-- Ranking rows -->
-        <section class="overflow-hidden rounded-xl border bg-card">
-          <div class="flex items-center gap-3 border-b bg-muted/40 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            <span class="w-5 text-center">#</span>
+        <section class="overflow-hidden rounded-2xl border border-border bg-card shadow-xl">
+          <div class="flex items-center gap-3 border-b border-border bg-secondary/40 px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            <span class="w-6 text-center">#</span>
             <span class="w-8" />
             <span class="flex-1">Jugador</span>
             <span>Puntos</span>
@@ -131,15 +139,27 @@ onUnmounted(() => {
             v-for="(entry, index) in leaderboard"
             :key="entry.user_id"
             :data-testid="isMe(entry) ? 'lb-row-me' : 'lb-row'"
-            class="flex items-center gap-3 border-b px-4 py-3 last:border-0"
-            :class="isMe(entry) ? 'border-l-2 border-l-primary bg-primary/10' : ''"
+            class="flex items-center gap-3 border-b border-border px-4 py-3 transition-colors last:border-0"
+            :class="isMe(entry) ? 'border-l-2 border-l-primary bg-primary/10' : 'hover:bg-secondary/30'"
           >
-            <span class="w-5 text-center text-sm font-semibold text-muted-foreground">
-              {{ index + 1 }}
+            <span class="flex w-6 justify-center">
+              <Medal
+                v-if="index === 0"
+                class="size-5 text-accent"
+              />
+              <span
+                v-else
+                class="text-sm font-semibold tabular-nums text-muted-foreground"
+              >
+                {{ index + 1 }}
+              </span>
             </span>
             <span
               data-testid="lb-avatar"
-              class="flex size-8 items-center justify-center rounded-full bg-secondary text-xs font-semibold text-secondary-foreground"
+              class="flex size-8 items-center justify-center rounded-full text-xs font-semibold"
+              :class="index === 0
+                ? 'bg-accent/15 text-accent'
+                : 'bg-secondary text-secondary-foreground'"
             >
               {{ initials(entry.display_name) }}
             </span>
@@ -149,24 +169,32 @@ onUnmounted(() => {
             >
               {{ isMe(entry) ? 'Tú' : entry.display_name }}
             </span>
-            <span class="font-mono font-semibold tabular-nums">
+            <span
+              class="font-mono font-semibold tabular-nums"
+              :class="index === 0 ? 'text-accent' : ''"
+            >
               {{ entry.total_points }}
             </span>
           </div>
 
           <div
             v-if="leaderboard.length === 0"
-            class="px-4 py-8 text-center text-sm text-muted-foreground"
+            class="px-4 py-10 text-center text-sm text-muted-foreground"
           >
             Sin miembros todavía.
           </div>
         </section>
 
         <!-- League stats sidebar (derived) -->
-        <aside class="h-fit space-y-4 rounded-xl border bg-card p-5 lg:sticky lg:top-8">
-          <h2 class="text-sm font-semibold">
-            Estadísticas de la liga
-          </h2>
+        <aside class="h-fit space-y-5 rounded-2xl border border-border bg-card p-5 shadow-xl lg:sticky lg:top-8">
+          <div class="flex items-center gap-2.5">
+            <span class="flex size-9 items-center justify-center rounded-full bg-accent/10 text-accent">
+              <Trophy class="size-5" />
+            </span>
+            <h2 class="text-sm font-semibold">
+              Estadísticas de la liga
+            </h2>
+          </div>
           <dl class="space-y-3 text-sm">
             <div class="flex items-center justify-between">
               <dt class="text-muted-foreground">
