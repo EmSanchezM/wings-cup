@@ -83,64 +83,67 @@ function formatKickoff(kickoffAt: string): string {
 
 <template>
   <div
-    class="rounded-lg border p-4 space-y-3"
+    class="rounded-xl border bg-card p-4 space-y-3 transition-colors"
+    :class="{ 'border-l-4 border-destructive': match.status === 'live' }"
     data-testid="prediction-card"
   >
-    <!-- Match header -->
-    <div class="space-y-1">
+    <!-- Header: stage/group + status badge -->
+    <div class="flex items-center justify-between gap-3">
       <p class="text-xs text-muted-foreground uppercase tracking-wide">
         {{ match.stage }}<span v-if="match.group_name"> · Grupo {{ match.group_name }}</span>
       </p>
-      <div class="flex items-center justify-between">
-        <span class="font-semibold">{{ match.home_team }}</span>
-        <span class="text-xs text-muted-foreground">vs</span>
-        <span class="font-semibold">{{ match.away_team }}</span>
-      </div>
-      <p class="text-xs text-muted-foreground">
-        {{ formatKickoff(match.kickoff_at) }}
-      </p>
+
+      <!-- Status badge — token-styled, dark-safe (replaces former bg-*-50 literals) -->
+      <span
+        v-if="isLocked"
+        data-testid="lock-badge"
+        class="inline-flex items-center gap-1 rounded-md border border-transparent bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground"
+      >
+        🔒 Bloqueada
+      </span>
+      <span
+        v-else-if="match.status === 'live'"
+        data-testid="live-badge"
+        class="inline-flex items-center gap-1 rounded-md border border-transparent bg-destructive px-2 py-0.5 text-xs font-medium text-destructive-foreground"
+      >
+        <span class="size-1.5 rounded-full bg-destructive-foreground" /> En vivo
+      </span>
+      <span
+        v-else-if="match.status === 'finished'"
+        data-testid="finished-badge"
+        class="inline-flex items-center gap-1 rounded-md border border-border px-2 py-0.5 text-xs font-medium text-muted-foreground"
+      >
+        Finalizado
+      </span>
+      <span
+        v-else
+        data-testid="status-badge"
+        class="inline-flex items-center gap-1 rounded-md border border-transparent bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground"
+      >
+        Pendiente
+      </span>
     </div>
 
-    <!-- Lock badge (shown when locked) -->
-    <div
-      v-if="isLocked"
-      class="flex items-center gap-1 rounded-md bg-yellow-50 border border-yellow-300 px-2 py-1 text-xs text-yellow-800 w-fit"
-      data-testid="lock-badge"
-    >
-      🔒 Predicción bloqueada
-    </div>
-
-    <!-- En vivo badge (status-based, not locked) -->
-    <div
-      v-if="match.status === 'live' && !isLocked"
-      class="flex items-center gap-1 rounded-md bg-red-50 border border-red-300 px-2 py-1 text-xs text-red-800 w-fit"
-      data-testid="live-badge"
-    >
-      🔴 En vivo
-    </div>
-
-    <!-- Finalizado badge (status-based, not locked) -->
-    <div
-      v-if="match.status === 'finished' && !isLocked"
-      class="flex items-center gap-1 rounded-md bg-gray-50 border border-gray-300 px-2 py-1 text-xs text-gray-700 w-fit"
-      data-testid="finished-badge"
-    >
-      ✅ Finalizado
-    </div>
-
-    <!-- Score inputs -->
+    <!-- Teams + score inputs -->
     <form
       class="space-y-3"
       @submit.prevent="handleSubmit"
     >
-      <div class="flex items-center gap-3">
-        <div class="flex-1 space-y-1">
-          <label
-            class="text-xs font-medium text-muted-foreground"
-            :for="`home-${match.id}`"
-          >
-            {{ match.home_team }}
-          </label>
+      <div class="flex items-center justify-between gap-3">
+        <!-- Home team -->
+        <label
+          :for="`home-${match.id}`"
+          class="flex min-w-0 flex-1 items-center gap-2 text-sm font-semibold"
+        >
+          <TeamFlag
+            :team="match.home_team"
+            :size="28"
+          />
+          <span class="truncate">{{ match.home_team }}</span>
+        </label>
+
+        <!-- Score inputs -->
+        <div class="flex shrink-0 items-center gap-2">
           <input
             :id="`home-${match.id}`"
             v-model.number="predictedHome"
@@ -148,21 +151,11 @@ function formatKickoff(kickoffAt: string): string {
             type="number"
             min="0"
             max="15"
-            class="w-full rounded-md border px-3 py-2 text-sm text-center"
+            class="w-14 rounded-md border bg-background px-2 py-2 text-center text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50 read-only:opacity-60"
             :readonly="isLocked || isReadonly"
             required
           >
-        </div>
-
-        <span class="text-muted-foreground font-bold pt-5">-</span>
-
-        <div class="flex-1 space-y-1">
-          <label
-            class="text-xs font-medium text-muted-foreground"
-            :for="`away-${match.id}`"
-          >
-            {{ match.away_team }}
-          </label>
+          <span class="text-xs font-bold text-muted-foreground">vs</span>
           <input
             :id="`away-${match.id}`"
             v-model.number="predictedAway"
@@ -170,17 +163,33 @@ function formatKickoff(kickoffAt: string): string {
             type="number"
             min="0"
             max="15"
-            class="w-full rounded-md border px-3 py-2 text-sm text-center"
+            class="w-14 rounded-md border bg-background px-2 py-2 text-center text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50 read-only:opacity-60"
             :readonly="isLocked || isReadonly"
             required
           >
         </div>
+
+        <!-- Away team -->
+        <label
+          :for="`away-${match.id}`"
+          class="flex min-w-0 flex-1 items-center justify-end gap-2 text-right text-sm font-semibold"
+        >
+          <span class="truncate">{{ match.away_team }}</span>
+          <TeamFlag
+            :team="match.away_team"
+            :size="28"
+          />
+        </label>
       </div>
 
-      <!-- Error messages -->
+      <p class="text-xs text-muted-foreground">
+        {{ formatKickoff(match.kickoff_at) }}
+      </p>
+
+      <!-- Error messages — token-styled (destructive), dark-safe -->
       <div
         v-if="error === 'prediction_locked'"
-        class="rounded-md border border-yellow-400 bg-yellow-50 p-2 text-xs text-yellow-800"
+        class="rounded-md border border-destructive/40 bg-destructive/10 p-2 text-xs text-destructive"
         role="alert"
       >
         Predicción bloqueada — ya no se puede modificar.
@@ -189,7 +198,7 @@ function formatKickoff(kickoffAt: string): string {
 
       <div
         v-else-if="error === 'match_already_started'"
-        class="rounded-md border border-red-400 bg-red-50 p-2 text-xs text-red-800"
+        class="rounded-md border border-destructive/40 bg-destructive/10 p-2 text-xs text-destructive"
         role="alert"
       >
         El partido ya empezó — no se aceptan más predicciones.
@@ -198,16 +207,16 @@ function formatKickoff(kickoffAt: string): string {
 
       <div
         v-else-if="error"
-        class="rounded-md border border-red-400 bg-red-50 p-2 text-xs text-red-800"
+        class="rounded-md border border-destructive/40 bg-destructive/10 p-2 text-xs text-destructive"
         role="alert"
       >
         {{ error }}
       </div>
 
-      <!-- Success badge -->
+      <!-- Success badge — token-styled (primary/emerald) -->
       <div
         v-if="success"
-        class="rounded-md border border-green-400 bg-green-50 p-2 text-xs text-green-800"
+        class="rounded-md border border-primary/40 bg-primary/10 p-2 text-xs text-primary"
         role="status"
       >
         ¡Predicción guardada!
@@ -227,7 +236,7 @@ function formatKickoff(kickoffAt: string): string {
         v-if="!isLocked && !isReadonly"
         type="submit"
         :disabled="submitting"
-        class="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
+        class="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
       >
         {{ submitting ? 'Guardando…' : 'Guardar predicción' }}
       </button>

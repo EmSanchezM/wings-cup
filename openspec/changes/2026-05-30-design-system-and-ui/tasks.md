@@ -102,17 +102,17 @@
 ## B43 — MatchPredictionCard restyle (RED → GREEN, script-invariant)
 **Satisfies**: R-UX-07 (card) · **Files**: `tests/nuxt/predictions.nuxt.test.ts` (extend), `app/components/MatchPredictionCard.vue`
 
-- [ ] T-121: [PREP] Read current `MatchPredictionCard.vue` script; record `predictedHome/Away`, `isLocked`, `isReadonly`, `handleSubmit`, error/success/final-score bindings — reuse verbatim, do NOT touch script.
-- [ ] T-122: [RED] Extend nuxt test — card shows teams + status `Badge` + score inputs; locked → readonly + indicator; assert **no `bg-yellow-50`/`bg-red-50`/`bg-green-50`/`bg-gray-50` literals remain**.
-- [ ] T-123: [GREEN] Restyle `MatchPredictionCard.vue` **template/classes only** — status divs → `Badge` (status map), native `<input>` → `Input`, live `border-l-4 border-destructive`, lock/finished readonly treatment via existing flags, keep per-card save button. Script untouched.
+- [x] T-121: [PREP] Read current `MatchPredictionCard.vue` script; recorded `predictedHome/Away`, `isLocked`, `isReadonly`, `handleSubmit`, error/success/final-score bindings — reused verbatim.
+- [x] T-122: [RED] `tests/nuxt/prediction-card-redesign.nuxt.test.ts` (4) — flags per team, "Pendiente" badge, live left border, **no `bg-*-50` literals remain**.
+- [x] T-123: [GREEN] Restyle `MatchPredictionCard.vue` **template only** — status divs → token badge spans (kept exact texts "En vivo"/"Finalizado" + data-testids), `<TeamFlag>` per team (auto-import → no script import), kept native inputs (token-styled; name/readonly preserved), live `border-l-4 border-destructive`, per-card save kept. **`<script setup>` byte-identical to origin/main (verified via diff).**
 
 ## B44 — predictions.vue restyle + points sidebar (RED → GREEN)
 **Satisfies**: R-UX-07 (page + sidebar) · **Files**: `tests/nuxt/predictions-page.nuxt.test.ts`, `app/pages/rooms/[id]/predictions.vue`
 
-- [ ] T-124: [RED] `tests/nuxt/predictions-page.nuxt.test.ts` — branded header; sidebar "completados N/M" from page data; given a leaderboard + current user, shows puntos + posición; leaderboard-fetch failure → cards still render, figures hidden.
-- [ ] T-125: [GREEN] Restyle `predictions.vue` (two-col grid, header, list) + add **read-only** leaderboard fetch to `Promise.all` + `useSupabaseUser` to derive sidebar (completados on-page; puntos/posición from leaderboard). Non-fatal on failure; no writes.
-- [ ] T-126: [VERIFY] Diff `MatchPredictionCard` script vs pre-restyle — identical; `predictions.vue` additions are read-only only; all pre-existing predictions tests green unmodified.
-- [ ] T-127: [CHORE] Tests green; `vue-tsc` clean; commit + open PR 3 → PR1.
+- [x] T-124: [RED] `tests/nuxt/predictions-sidebar.nuxt.test.ts` (4) — sidebar renders; "completados 1/2" from page data; puntos/posición from leaderboard + `useSupabaseUser` (mockNuxtImport); fetch-failure → cards render + figures show "—".
+- [x] T-125: [GREEN] Restyle `predictions.vue` (two-col grid, header, list) + read-only `loadLeaderboard()` in `Promise.all` + `useSupabaseUser` deriving sidebar (completados on-page; puntos/posición from leaderboard). Non-fatal (useLeaderboard self-catches); no writes.
+- [x] T-126: [VERIFY] `MatchPredictionCard` `<script setup>` byte-identical to origin/main (diff ✓); `predictions.vue` additions read-only; all 22 pre-existing predictions tests green unmodified (nuxt 63/63). NOTE: T-50-05's title says "no useSupabaseUser import" — now stale (scope approved adding it); its assertion is a mount smoke-check and still passes; left unmodified.
+- [x] T-127: [CHORE] unit 215 + nuxt 63 green; `vue-tsc` clean; committed. ⏳ Push + open PR 3 pending user merge.
 
 ---
 
