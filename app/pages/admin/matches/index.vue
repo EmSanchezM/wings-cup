@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
-import { Shield, Lock, Clock, Pencil, ChevronLeft, ChevronRight, CalendarDays } from 'lucide-vue-next'
+import { Shield, Lock, Clock, Pencil, ChevronLeft, ChevronRight, CalendarDays, HelpCircle, ChevronDown } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -21,6 +21,37 @@ const statusLabel: Record<string, string> = {
   finished: 'Finalizado',
   postponed: 'Pospuesto',
 }
+
+// Admin-facing guide: what each status means and what to do. Accurate to the
+// calculate_points() trigger (scoring fires only when a match becomes 'finished'
+// WITH both scores set) and the postponed exclusion from predictions.
+const statusGuide: { value: string, label: string, variant: BadgeVariant, help: string }[] = [
+  {
+    value: 'scheduled',
+    label: 'Programado',
+    variant: 'secondary',
+    help: 'El partido todavía no empezó. Los jugadores pueden cargar y editar sus pronósticos. No hay nada que hacer.',
+  },
+  {
+    value: 'live',
+    label: 'En vivo',
+    variant: 'destructive',
+    help: 'El partido está en juego. Los pronósticos ya quedaron cerrados. Podés ir cargando el marcador, pero los puntos recién se reparten al finalizar.',
+  },
+  {
+    value: 'finished',
+    label: 'Finalizado',
+    variant: 'outline',
+    help: 'El partido terminó. Cargá el marcador final (ambos goles) y poné el estado en Finalizado: eso reparte los puntos a todos automáticamente. Ojo: sin marcador cargado no se calcula nada.',
+  },
+  {
+    value: 'postponed',
+    label: 'Pospuesto',
+    variant: 'accent',
+    help: 'El partido se suspendió o reprogramó. Queda fuera de los pronósticos hasta que tenga una nueva fecha.',
+  },
+]
+const showGuide = ref(false)
 
 interface EditDraft {
   status: NonNullable<MatchUpdate['status']>
@@ -204,28 +235,27 @@ onMounted(async () => {
         </div>
       </header>
 
-      <section class="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border bg-card p-5 shadow-xl">
-        <div class="flex items-center gap-3">
-          <span class="flex size-9 items-center justify-center rounded-full bg-destructive/10 text-destructive">
-            <Lock class="size-5" />
-          </span>
-          <div>
-            <p class="text-sm font-semibold">
-              Bloquear predicciones
-            </p>
-            <p class="text-xs text-muted-foreground">
-              Cierra los pronósticos de partidos que ya empezaron.
-            </p>
+      <section class="space-y-4 rounded-2xl border border-border bg-card p-5 shadow-xl">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div class="flex items-start gap-3">
+            <span class="flex size-9 shrink-0 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+              <Lock class="size-5" />
+            </span>
+            <div class="space-y-1">
+              <p class="text-sm font-semibold">
+                Bloquear predicciones
+              </p>
+              <p class="max-w-prose text-xs leading-relaxed text-muted-foreground">
+                Congela de una sola vez los pronósticos de
+                <span class="font-medium text-foreground">todos los partidos que ya empezaron</span>
+                (su horario de inicio ya pasó). Quedan cerrados: el jugador no los
+                puede modificar y los ve con un candado 🔒. No afecta a los partidos
+                que todavía no arrancaron.
+              </p>
+            </div>
           </div>
-        </div>
-        <div class="flex items-center gap-3">
-          <p
-            v-if="lockedCount !== null"
-            class="text-sm text-muted-foreground"
-          >
-            {{ lockedCount }} bloqueadas
-          </p>
           <Button
+            class="shrink-0"
             :disabled="lockingNow"
             @click="handleLockNow"
           >
@@ -233,6 +263,24 @@ onMounted(async () => {
             {{ lockingNow ? 'Bloqueando…' : 'Bloquear ahora' }}
           </Button>
         </div>
+
+        <!-- Result feedback -->
+        <p
+          v-if="lockedCount !== null"
+          class="rounded-lg border px-3 py-2 text-xs"
+          :class="lockedCount > 0
+            ? 'border-primary/40 bg-primary/10 text-primary'
+            : 'border-border bg-secondary/40 text-muted-foreground'"
+          role="status"
+        >
+          <template v-if="lockedCount > 0">
+            Se {{ lockedCount === 1 ? 'bloqueó' : 'bloquearon' }}
+            {{ lockedCount }} {{ lockedCount === 1 ? 'predicción' : 'predicciones' }}.
+          </template>
+          <template v-else>
+            No había predicciones nuevas para bloquear — todo al día.
+          </template>
+        </p>
       </section>
 
       <p
@@ -242,6 +290,46 @@ onMounted(async () => {
       >
         {{ saveError }}
       </p>
+
+      <!-- Status guide — what each state means and what to do -->
+      <section class="space-y-3 rounded-2xl border border-border bg-card p-5 shadow-xl">
+        <button
+          type="button"
+          class="flex w-full items-center justify-between gap-2 text-left"
+          :aria-expanded="showGuide"
+          @click="showGuide = !showGuide"
+        >
+          <span class="flex items-center gap-2 text-sm font-semibold">
+            <HelpCircle class="size-4 text-accent" />
+            ¿Qué significa cada estado?
+          </span>
+          <ChevronDown
+            class="size-4 shrink-0 text-muted-foreground transition-transform"
+            :class="showGuide ? 'rotate-180' : ''"
+          />
+        </button>
+
+        <ul
+          v-if="showGuide"
+          class="space-y-3 border-t border-border pt-3"
+        >
+          <li
+            v-for="s in statusGuide"
+            :key="s.value"
+            class="flex flex-col gap-1.5 sm:flex-row sm:items-start sm:gap-3"
+          >
+            <Badge
+              :variant="s.variant"
+              class="w-fit shrink-0 sm:w-24 sm:justify-center"
+            >
+              {{ s.label }}
+            </Badge>
+            <p class="text-xs leading-relaxed text-muted-foreground">
+              {{ s.help }}
+            </p>
+          </li>
+        </ul>
+      </section>
 
       <section class="space-y-3">
         <h2 class="text-sm font-semibold">
