@@ -3,11 +3,7 @@ import { ref } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
-definePageMeta({
-  // This page is excluded from the redirect guard via redirectOptions.exclude: ['/auth/*']
-  // Authenticated users visiting /auth/login are NOT force-redirected away.
-  layout: false,
-})
+definePageMeta({ layout: false })
 
 const supabase = useSupabaseClient()
 
@@ -16,10 +12,6 @@ const magicLinkSent = ref(false)
 const isLoading = ref(false)
 const error = ref<string | null>(null)
 
-/**
- * R-AUTH-09: "Sign in with Google" calls signInWithOAuth with redirectTo pointing at /auth/confirm.
- * The PKCE exchange happens in confirm.vue.
- */
 async function signInWithGoogle() {
   error.value = null
   isLoading.value = true
@@ -40,10 +32,6 @@ async function signInWithGoogle() {
   }
 }
 
-/**
- * R-AUTH-13: Magic link uses signInWithOtp with emailRedirectTo pointing at /auth/confirm.
- * On first sign-in the handle_new_user trigger creates a profiles row with is_guest = true.
- */
 async function sendMagicLink() {
   if (!email.value.trim()) return
   error.value = null

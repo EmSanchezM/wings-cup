@@ -3,12 +3,6 @@ import { makeLeaderboardClient } from '../utils/leaderboard-client'
 import type { LeaderboardEntry } from '../../shared/types/leaderboard'
 import type { RoomMember } from '../../shared/types/rooms'
 
-// ---------------------------------------------------------------------------
-// Pure reducer — exported for testing (D6a)
-// ---------------------------------------------------------------------------
-
-/** Immutable update + re-sort: find entry by user_id, merge total_points and joined_at
- *  from payload while preserving display_name. Returns same reference if not found. */
 export function applyMemberUpdate(
   prev: LeaderboardEntry[],
   payload: { new: RoomMember },
@@ -33,10 +27,6 @@ export function applyMemberUpdate(
   return next
 }
 
-// ---------------------------------------------------------------------------
-// Composable
-// ---------------------------------------------------------------------------
-
 export function useLeaderboard(roomId: string) {
   const data = ref<LeaderboardEntry[]>([])
   const pending = ref(false)
@@ -59,17 +49,8 @@ export function useLeaderboard(roomId: string) {
     }
   }
 
-  // -------------------------------------------------------------------------
-  // subscribe — R-RT-03 / design D1, D3, D4
-  // -------------------------------------------------------------------------
-
   type RealtimePayload = { new: RoomMember }
 
-  // NOTE: superseded by matches-driven reload in leaderboard.vue due to Supabase Realtime
-  // + SECURITY DEFINER RLS interaction on room_members (bug #400 / R-RT-06).
-  // Kept as-is — correct code, tested, ready to re-enable as primary source if/when
-  // Supabase resolves the SECURITY DEFINER + Realtime RLS issue or we migrate to
-  // Broadcast Changes. See proposal sdd/leaderboard-realtime-via-matches for context.
   function subscribe(onUpdate: (payload: RealtimePayload) => void): () => void {
     const supabase = useSupabaseClient()
     let seenSubscribed = false

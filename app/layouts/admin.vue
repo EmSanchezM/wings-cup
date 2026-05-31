@@ -4,8 +4,6 @@ import { Trophy, Shield, LogOut, ArrowLeft, CalendarClock } from 'lucide-vue-nex
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 
-// Distinct shell for the admin area. Pages opt in via definePageMeta({ layout: 'admin' }).
-// Access control still lives in each admin page (authoritative gate); this is chrome only.
 const supabase = useSupabaseClient()
 const user = useSupabaseUser()
 const route = useRoute()

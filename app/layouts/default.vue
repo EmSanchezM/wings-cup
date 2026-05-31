@@ -7,7 +7,6 @@ const supabase = useSupabaseClient()
 const user = useSupabaseUser()
 const router = useRouter()
 
-// Show the Admin entry only to super admins (cached for the session).
 const { isSuperAdmin, ensure: ensureSuperAdmin } = useSuperAdmin()
 onMounted(() => {
   void ensureSuperAdmin()

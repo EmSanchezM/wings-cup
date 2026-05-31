@@ -22,9 +22,6 @@ const statusLabel: Record<string, string> = {
   postponed: 'Pospuesto',
 }
 
-// Admin-facing guide: what each status means and what to do. Accurate to the
-// calculate_points() trigger (scoring fires only when a match becomes 'finished'
-// WITH both scores set) and the postponed exclusion from predictions.
 const statusGuide: { value: string, label: string, variant: BadgeVariant, help: string }[] = [
   {
     value: 'scheduled',
@@ -71,8 +68,6 @@ const saveError = ref<string | null>(null)
 const lockingNow = ref(false)
 const lockedCount = ref<number | null>(null)
 
-// --- Matchday (date) filter — same UX as the predictions page: view one day at
-// a time, default to today (else next/last), navigate with arrows, expand on demand.
 interface MatchBucket {
   key: string
   label: string
