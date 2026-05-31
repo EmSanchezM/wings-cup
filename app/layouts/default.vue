@@ -1,11 +1,17 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { Trophy, LogOut } from 'lucide-vue-next'
+import { computed, onMounted } from 'vue'
+import { Trophy, LogOut, Shield } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 
 const supabase = useSupabaseClient()
 const user = useSupabaseUser()
 const router = useRouter()
+
+// Show the Admin entry only to super admins (cached for the session).
+const { isSuperAdmin, ensure: ensureSuperAdmin } = useSuperAdmin()
+onMounted(() => {
+  void ensureSuperAdmin()
+})
 
 const email = computed(() => {
   const u = user.value as { email?: string } | null
@@ -36,6 +42,17 @@ async function logout() {
         </NuxtLink>
 
         <div class="flex items-center gap-2 sm:gap-3">
+          <Button
+            v-if="isSuperAdmin"
+            as-child
+            variant="outline"
+            size="sm"
+          >
+            <NuxtLink to="/admin/matches">
+              <Shield class="size-4" />
+              <span class="hidden sm:inline">Admin</span>
+            </NuxtLink>
+          </Button>
           <span
             v-if="email"
             class="hidden max-w-[12rem] truncate text-sm text-muted-foreground sm:inline"

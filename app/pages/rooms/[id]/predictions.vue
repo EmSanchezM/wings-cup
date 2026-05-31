@@ -267,7 +267,7 @@ onUnmounted(() => {
                 <div class="flex items-center gap-2 rounded-xl border border-border bg-card p-2">
                   <Button
                     type="button"
-                    variant="ghost"
+                    variant="outline"
                     size="icon"
                     :disabled="!hasPrevDate"
                     aria-label="Jornada anterior"
@@ -288,7 +288,7 @@ onUnmounted(() => {
                   </div>
                   <Button
                     type="button"
-                    variant="ghost"
+                    variant="outline"
                     size="icon"
                     :disabled="!hasNextDate"
                     aria-label="Jornada siguiente"
