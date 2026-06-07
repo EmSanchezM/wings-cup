@@ -1,4 +1,4 @@
-import type { CreateRoomInput } from '#shared/schemas/room.schema'
+import type { CreateRoomInput, UpdateRoomInput } from '#shared/schemas/room.schema'
 import type { JoinPayload } from '#shared/schemas/join.schema'
 import type {
   Room,
@@ -38,6 +38,14 @@ export function makeRoomClient(fetchImpl: typeof $fetch) {
         method: 'POST',
         body: payload,
       })
+    },
+
+    async updateRoom(id: string, input: UpdateRoomInput): Promise<Room> {
+      const { room } = await fetchImpl<{ room: Room }>(`/api/rooms/${id}`, {
+        method: 'PATCH',
+        body: input,
+      })
+      return room
     },
   }
 }

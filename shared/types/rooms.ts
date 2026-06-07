@@ -25,5 +25,5 @@ export interface RoomPreview {
   isActive: boolean
 }
 
-export type { CreateRoomInput } from '../schemas/room.schema'
+export type { CreateRoomInput, UpdateRoomInput } from '../schemas/room.schema'
 export type { JoinPayload } from '../schemas/join.schema'

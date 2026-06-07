@@ -11,3 +11,11 @@ export const createRoomSchema = z.object({
 })
 
 export type CreateRoomInput = z.infer<typeof createRoomSchema>
+
+export const updateRoomSchema = z.object({
+  name: trimmedRequired('name', 100).optional(),
+  prize_description: trimmedOptional('prize_description', 500).optional(),
+  scoring_rules: scoringRulesSchema.optional(),
+}).refine(o => Object.keys(o).length > 0, 'at least one field required')
+
+export type UpdateRoomInput = z.infer<typeof updateRoomSchema>
