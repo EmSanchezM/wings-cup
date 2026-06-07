@@ -21,9 +21,11 @@ export default defineNuxtConfig({
   },
 
   runtimeConfig: {
-    // SERVER-ONLY: these never reach the client bundle.
-    // Env convention: NUXT_* (without PUBLIC_) → top-level runtimeConfig.* (server-only).
-    cronSecret: '', // env: NUXT_CRON_SECRET
+    // Reserved server-only placeholder. Keep at least one top-level (non-public) key:
+    // an empty server runtimeConfig breaks @nuxtjs/supabase client init in the Nuxt
+    // test env. Prediction locking runs via Supabase pg_cron (lock_started_predictions),
+    // so there is no cron secret / HTTP cron endpoint anymore.
+    _reserved: '',
     public: {
       // Optional canonical origin for absolute OG/canonical URLs (e.g. https://wings-cup.vercel.app).
       // Falls back to the request origin when empty. Env: NUXT_PUBLIC_SITE_URL
