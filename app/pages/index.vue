@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Trophy, PlusCircle, UserPlus, Flag, ArrowRight } from 'lucide-vue-next'
+import { PlusCircle, UserPlus, Flag, ArrowRight } from 'lucide-vue-next'
 import { Button } from '~/components/ui/button'
 
 definePageMeta({ layout: false })
@@ -9,6 +9,13 @@ const year = new Date().getFullYear()
 const user = useSupabaseUser()
 const isAuthed = computed(() => !!user.value)
 const ctaTo = computed(() => (isAuthed.value ? '/rooms' : '/auth/login'))
+
+useSeoMeta({
+  title: 'La quiniela del Mundial entre amigos',
+  description: 'Creá tu quiniela, invitá a tus amigos y demostrá quién sabe más de fútbol. Gratis, rápido y en tiempo real. Sin apuestas, solo gloria.',
+  ogTitle: 'Wings Cup · La quiniela entre amigos',
+  ogDescription: 'Creá tu quiniela, invitá a tus amigos y competí prediciendo los partidos en tiempo real.',
+})
 
 const steps = [
   {
@@ -34,7 +41,7 @@ const steps = [
     <!-- Nav -->
     <header class="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-5 sm:px-8">
       <span class="flex items-center gap-2 text-lg font-bold tracking-tight">
-        <Trophy class="size-5 text-accent" />
+        <WingLogo class="size-6" />
         <span>Wings <span class="text-primary">Cup</span></span>
       </span>
       <Button
@@ -199,7 +206,7 @@ const steps = [
     <footer class="border-t border-border">
       <div class="mx-auto flex w-full max-w-6xl flex-col items-center justify-between gap-3 px-4 py-8 text-sm text-muted-foreground sm:flex-row sm:px-8">
         <span class="flex items-center gap-2">
-          <Trophy class="size-4 text-accent" />
+          <WingLogo class="size-5" />
           <span class="font-semibold text-foreground">Wings <span class="text-primary">Cup</span></span>
           <span>· © {{ year }}</span>
         </span>

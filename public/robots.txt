@@ -1,0 +1,6 @@
+User-agent: *
+Disallow: /join/
+Disallow: /rooms/
+Disallow: /admin/
+Disallow: /auth/
+Disallow: /api/

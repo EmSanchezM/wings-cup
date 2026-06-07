@@ -5,6 +5,8 @@ import { Input } from '~/components/ui/input'
 
 definePageMeta({ layout: false })
 
+useSeoMeta({ title: 'Ingresar', robots: 'noindex, nofollow' })
+
 const supabase = useSupabaseClient()
 
 const email = ref('')

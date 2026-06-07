@@ -4,6 +4,8 @@ definePageMeta({
   layout: false,
 })
 
+useSeoMeta({ title: 'Confirmando…', robots: 'noindex, nofollow' })
+
 const supabase = useSupabaseClient()
 const route = useRoute()
 const router = useRouter()

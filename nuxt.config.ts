@@ -12,11 +12,23 @@ export default defineNuxtConfig({
 
   css: ['~/assets/css/tailwind.css'],
 
+  app: {
+    head: {
+      link: [
+        { rel: 'icon', type: 'image/svg+xml', href: '/wing-logo.svg' },
+      ],
+    },
+  },
+
   runtimeConfig: {
     // SERVER-ONLY: these never reach the client bundle.
     // Env convention: NUXT_* (without PUBLIC_) → top-level runtimeConfig.* (server-only).
     cronSecret: '', // env: NUXT_CRON_SECRET
-    public: {},
+    public: {
+      // Optional canonical origin for absolute OG/canonical URLs (e.g. https://wings-cup.vercel.app).
+      // Falls back to the request origin when empty. Env: NUXT_PUBLIC_SITE_URL
+      siteUrl: '',
+    },
   },
 
   future: { compatibilityVersion: 4 },

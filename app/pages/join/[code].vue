@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { computed, onMounted, ref, watch, type Ref } from 'vue'
 import { Button } from '~/components/ui/button'
 import { Input } from '~/components/ui/input'
 import type { RoomPreview } from '#shared/types/rooms'
@@ -13,12 +13,10 @@ const router = useRouter()
 const supabase = useSupabaseClient()
 const user = useSupabaseUser()
 const roomClient = useRoom()
+const config = useRuntimeConfig()
+const requestUrl = useRequestURL()
 
 const code = route.params.code as string
-const preview = ref<RoomPreview | null>(null)
-const isLoadingPreview = ref(true)
-const previewNotFound = ref(false)
-const previewError = ref<string | null>(null)
 
 const email = ref('')
 const displayName = ref('')
@@ -37,24 +35,34 @@ function fetchStatus(err: unknown): number | null {
   return e?.statusCode ?? e?.status ?? e?.response?.status ?? null
 }
 
-async function loadPreview() {
-  try {
-    const result = await roomClient.previewByCode(code)
-    if (!result) return // 401: toast handles UX
-    preview.value = result
-  }
-  catch (e) {
-    if (fetchStatus(e) === 404) {
-      previewNotFound.value = true
-    }
-    else {
-      previewError.value = e instanceof Error ? e.message : 'No se pudo cargar la sala'
-    }
-  }
-  finally {
-    isLoadingPreview.value = false
-  }
-}
+// SSR-fetched so social scrapers (WhatsApp/Telegram/etc.) and meta tags get the room preview.
+const { data: _previewData, error: previewErr, status: previewStatus } = await useAsyncData<RoomPreview>(
+  `room-preview-${code}`,
+  () => roomClient.previewByCode(code) as Promise<RoomPreview>,
+)
+const preview = _previewData as Ref<RoomPreview | null>
+
+const isLoadingPreview = computed(() => previewStatus.value === 'pending')
+const previewNotFound = computed(() => !!previewErr.value && fetchStatus(previewErr.value) === 404)
+const previewError = computed(() => {
+  if (!previewErr.value || previewNotFound.value) return null
+  return previewErr.value instanceof Error ? previewErr.value.message : 'No se pudo cargar la sala'
+})
+
+const origin = (config.public.siteUrl as string) || requestUrl.origin
+
+useSeoMeta({
+  title: () => (preview.value ? preview.value.roomName : 'Unirse a una sala'),
+  description: () => (preview.value
+    ? `${preview.value.creatorName} te invitó a su quiniela "${preview.value.roomName}" en Wings Cup. Sumate y demostrá quién sabe más de fútbol.`
+    : 'Sumate a la quiniela entre amigos en Wings Cup.'),
+  ogTitle: () => (preview.value ? `Te invitaron a "${preview.value.roomName}"` : 'Unite a Wings Cup'),
+  ogDescription: () => (preview.value
+    ? `${preview.value.creatorName} te invitó a su quiniela en Wings Cup. Pronosticá los partidos y competí con tus amigos.`
+    : 'Sumate a la quiniela entre amigos en Wings Cup.'),
+  ogUrl: `${origin}/join/${code}`,
+  robots: 'noindex, nofollow',
+})
 
 async function autoJoin() {
   if (!user.value || !preview.value || isJoining.value) return
@@ -62,7 +70,7 @@ async function autoJoin() {
   joinError.value = null
   try {
     const result = await roomClient.joinByCode(code, { provider: 'google' })
-    if (!result) return // 401: toast handles UX
+    if (!result) return
     await router.replace(`/rooms/${result.roomId}`)
   }
   catch (e) {
@@ -111,7 +119,6 @@ async function signInWithGoogle() {
 }
 
 onMounted(async () => {
-  await loadPreview()
   if (user.value && preview.value) {
     await autoJoin()
   }

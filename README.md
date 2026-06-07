@@ -39,6 +39,8 @@ Follow these steps on a clean checkout to get the project running locally.
    # Open .env and set NUXT_PUBLIC_SUPABASE_URL, NUXT_PUBLIC_SUPABASE_KEY,
    # NUXT_SUPABASE_SERVICE_KEY. Leave NUXT_CRON_SECRET and NUXT_API_FOOTBALL_KEY
    # empty for now -- they are used by slice 3 (matches + predictions).
+   # NUXT_PUBLIC_SITE_URL is optional; set it to the canonical origin for SEO/OG
+   # absolute URLs (e.g. https://wings-cup.vercel.app). Falls back to request origin.
    ```
    Get your Supabase URL and keys from **Project Settings -> API** in the Supabase dashboard.
 
