@@ -37,10 +37,11 @@ Follow these steps on a clean checkout to get the project running locally.
    ```bash
    cp .env.example .env
    # Open .env and set NUXT_PUBLIC_SUPABASE_URL, NUXT_PUBLIC_SUPABASE_KEY,
-   # NUXT_SUPABASE_SERVICE_KEY. Leave NUXT_CRON_SECRET and NUXT_API_FOOTBALL_KEY
-   # empty for now -- they are used by slice 3 (matches + predictions).
+   # NUXT_SUPABASE_SERVICE_KEY. NUXT_API_FOOTBALL_KEY can stay empty (match sync, not wired yet).
    # NUXT_PUBLIC_SITE_URL is optional; set it to the canonical origin for SEO/OG
    # absolute URLs (e.g. https://wings-cup.vercel.app). Falls back to request origin.
+   # Prediction locking runs in the database via Supabase pg_cron (lock_started_predictions),
+   # so no cron secret / HTTP cron endpoint is needed.
    ```
    Get your Supabase URL and keys from **Project Settings -> API** in the Supabase dashboard.
 

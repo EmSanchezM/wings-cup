@@ -10,30 +10,8 @@
  * in @nuxtjs/supabase v2 is "serverSupabaseServiceRole". This comment documents the deviation.
  */
 import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
-import { createError, getHeader } from 'h3'
+import { createError } from 'h3'
 import type { H3Event } from 'h3'
-
-/**
- * Validates the Vercel cron Authorization header.
- *
- * Vercel cron jobs send:  Authorization: Bearer <CRON_SECRET>
- * The secret is stored in runtimeConfig.cronSecret (env: NUXT_CRON_SECRET — server-only).
- *
- * Usage (slice 3):
- *   export default defineEventHandler(async (event) => {
- *     await requireCronSecret(event)
- *     // ... cron logic
- *   })
- */
-export async function requireCronSecret(event: H3Event): Promise<void> {
-  const config = useRuntimeConfig(event)
-  const authHeader = getHeader(event, 'authorization') ?? ''
-  const expected = `Bearer ${config.cronSecret}`
-
-  if (!config.cronSecret || authHeader !== expected) {
-    throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
-  }
-}
 
 /**
  * Re-validates that the current user is a super-admin using the service-role client.
