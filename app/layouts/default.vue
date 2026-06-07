@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
-import { Trophy, LogOut, Shield } from 'lucide-vue-next'
+import { LogOut, Shield } from 'lucide-vue-next'
 import { Button } from '~/components/ui/button'
 
 const supabase = useSupabaseClient()
@@ -36,7 +36,7 @@ async function logout() {
           to="/rooms"
           class="flex items-center gap-2 text-lg font-bold tracking-tight"
         >
-          <Trophy class="size-5 text-accent" />
+          <WingLogo class="size-6" />
           <span>Wings <span class="text-primary">Cup</span></span>
         </NuxtLink>
 
