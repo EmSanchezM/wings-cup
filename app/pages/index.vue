@@ -110,7 +110,7 @@ const steps = [
         >
           <div class="mb-4 flex items-center justify-between text-xs">
             <span class="inline-flex items-center gap-1 font-semibold text-destructive">
-              <span class="size-2 rounded-full bg-destructive" /> EN VIVO · Grupo B
+              <span class="size-2 rounded-full bg-destructive" /> EN VIVO · Grupo J
             </span>
             <span class="text-muted-foreground">75'</span>
           </div>
@@ -125,22 +125,22 @@ const steps = [
             <span class="text-3xl font-bold tracking-widest">2 - 1</span>
             <div class="flex flex-col items-center gap-2">
               <TeamFlag
-                team="Chile"
+                team="Argelia"
                 :size="40"
               />
-              <span class="text-sm font-semibold">CHI</span>
+              <span class="text-sm font-semibold">ALG</span>
             </div>
           </div>
           <div class="mt-4 flex items-center justify-between rounded-xl border border-border px-4 py-4 text-sm">
-            <span class="text-muted-foreground">Grupo C · 18 JUN</span>
+            <span class="text-muted-foreground">Grupo C · 13 JUN</span>
             <span class="flex items-center gap-2 font-medium">
               <TeamFlag
-                team="Brazil"
+                team="Brasil"
                 :size="20"
               />
-              BRA <span class="text-muted-foreground">vs</span> COL
+              BRA <span class="text-muted-foreground">vs</span> MAR
               <TeamFlag
-                team="Colombia"
+                team="Marruecos"
                 :size="20"
               />
             </span>
