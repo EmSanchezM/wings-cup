@@ -1,19 +1,96 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { Trophy, Users, Flag, BarChart3, Copy, Check } from 'lucide-vue-next'
+import { ref, computed, onMounted, reactive } from 'vue'
+import { Trophy, Users, Flag, BarChart3, Copy, Check, Pencil } from 'lucide-vue-next'
 import { Button } from '~/components/ui/button'
 import { Badge } from '~/components/ui/badge'
+import { Input } from '~/components/ui/input'
 import type { Room, RoomMemberView } from '#shared/types/rooms'
+import type { UpdateRoomInput } from '#shared/schemas/room.schema'
 
 // Auth enforced by @nuxtjs/supabase redirectOptions (covers /rooms/**)
 const route = useRoute()
 const roomClient = useRoom()
 const roomId = route.params.id as string
 
+const user = useSupabaseUser()
+const { isSuperAdmin, ensure } = useSuperAdmin()
+
 const room = ref<Room | null>(null)
 const members = ref<RoomMemberView[]>([])
 const isLoading = ref(true)
 const error = ref<string | null>(null)
+
+const isOwner = computed(() => !!user.value?.id && room.value?.created_by === user.value.id)
+const canEdit = computed(() => isOwner.value || isSuperAdmin.value === true)
+
+// Edit state
+const isEditing = ref(false)
+const editSubmitting = ref(false)
+const editError = ref<string | null>(null)
+
+const editName = ref('')
+const editPrize = ref('')
+const editRules = reactive({
+  exact_score: 0,
+  correct_goal_diff: 0,
+  correct_result: 0,
+  wrong: 0,
+})
+
+function openEdit() {
+  if (!room.value) return
+  // Cast to unknown first to cut TS recursion from the Json JSONB type in Room.
+  // Using `as unknown as Record<string, unknown>` before property access avoids
+  // TS2589 "type instantiation is excessively deep" caused by Supabase's recursive Json typedef.
+  const r = room.value as unknown as Record<string, unknown>
+  editName.value = r['name'] as string
+  editPrize.value = (r['prize_description'] as string | null) ?? ''
+  const sr = r['scoring_rules'] as Record<string, number> | null | undefined
+  editRules.exact_score = sr?.['exact_score'] ?? 5
+  editRules.correct_goal_diff = sr?.['correct_goal_diff'] ?? 3
+  editRules.correct_result = sr?.['correct_result'] ?? 1
+  editRules.wrong = sr?.['wrong'] ?? 0
+  editError.value = null
+  isEditing.value = true
+}
+
+function cancelEdit() {
+  isEditing.value = false
+  editError.value = null
+}
+
+async function saveEdit() {
+  if (!room.value) return
+  editSubmitting.value = true
+  editError.value = null
+  try {
+    const patch: UpdateRoomInput = {
+      name: editName.value.trim(),
+      prize_description: editPrize.value.trim(),
+      scoring_rules: { ...editRules },
+    }
+    const updated = await roomClient.updateRoom(roomId, patch)
+    if (!updated) return // 401 handled by guard
+    room.value = updated
+    isEditing.value = false
+  }
+  catch (err) {
+    const status = (err as { statusCode?: number })?.statusCode
+    const msg = (err as { statusMessage?: string })?.statusMessage
+    if (status === 409 || msg === 'room_already_started') {
+      editError.value = 'Las reglas ya no se pueden cambiar: el torneo arrancó.'
+    }
+    else if (status === 403 || msg === 'forbidden') {
+      editError.value = 'No tenés permiso para editar esta sala.'
+    }
+    else {
+      editError.value = err instanceof Error ? err.message : 'Error al guardar los cambios.'
+    }
+  }
+  finally {
+    editSubmitting.value = false
+  }
+}
 
 const copied = ref(false)
 async function copyCode(code: string) {
@@ -36,6 +113,7 @@ function memberInitials(name: string): string {
 }
 
 onMounted(async () => {
+  await ensure()
   try {
     const result = await roomClient.getRoom(roomId)
     if (!result) return // 401: toast handles UX
@@ -90,12 +168,24 @@ onMounted(async () => {
                 {{ room.prize_description }}
               </p>
             </div>
-            <Badge
-              variant="outline"
-              class="shrink-0 font-mono"
-            >
-              {{ room.invite_code }}
-            </Badge>
+            <div class="flex shrink-0 items-center gap-2">
+              <Badge
+                variant="outline"
+                class="font-mono"
+              >
+                {{ room.invite_code }}
+              </Badge>
+              <Button
+                v-if="canEdit"
+                type="button"
+                variant="outline"
+                size="sm"
+                @click="openEdit"
+              >
+                <Pencil class="size-3.5" />
+                Editar
+              </Button>
+            </div>
           </div>
 
           <!-- Invite code with copy -->
@@ -121,6 +211,138 @@ onMounted(async () => {
             </Button>
           </div>
         </header>
+
+        <!-- Edit form -->
+        <section
+          v-if="isEditing"
+          class="space-y-4 rounded-2xl border border-border bg-card p-5 shadow-xl"
+        >
+          <div class="flex items-center gap-2.5">
+            <span class="flex size-9 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <Pencil class="size-5" />
+            </span>
+            <h2 class="text-sm font-semibold">
+              Editar sala
+            </h2>
+          </div>
+
+          <div class="space-y-2">
+            <label
+              for="edit-name"
+              class="text-sm font-medium"
+            >Nombre</label>
+            <Input
+              id="edit-name"
+              v-model="editName"
+              maxlength="100"
+            />
+          </div>
+
+          <div class="space-y-2">
+            <label
+              for="edit-prize"
+              class="text-sm font-medium"
+            >Premio <span class="font-normal text-muted-foreground">(opcional)</span></label>
+            <Input
+              id="edit-prize"
+              v-model="editPrize"
+              maxlength="500"
+            />
+          </div>
+
+          <div class="space-y-3">
+            <p class="text-sm font-medium">
+              Puntos por acierto
+            </p>
+
+            <div class="flex items-center justify-between gap-3 rounded-xl bg-secondary/40 px-4 py-3">
+              <div class="min-w-0">
+                <p class="text-sm font-medium">
+                  Marcador exacto
+                </p>
+                <p class="text-xs text-muted-foreground">
+                  Acertás el resultado completo.
+                </p>
+              </div>
+              <input
+                v-model.number="editRules.exact_score"
+                type="number"
+                min="0"
+                max="100"
+                aria-label="Puntos por marcador exacto"
+                class="size-12 shrink-0 rounded-lg border border-input bg-background text-center text-lg font-bold tabular-nums focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              >
+            </div>
+
+            <div class="flex items-center justify-between gap-3 rounded-xl bg-secondary/40 px-4 py-3">
+              <div class="min-w-0">
+                <p class="text-sm font-medium">
+                  Diferencia de gol
+                </p>
+                <p class="text-xs text-muted-foreground">
+                  Acertás la diferencia pero no el marcador.
+                </p>
+              </div>
+              <input
+                v-model.number="editRules.correct_goal_diff"
+                type="number"
+                min="0"
+                max="100"
+                aria-label="Puntos por diferencia de gol"
+                class="size-12 shrink-0 rounded-lg border border-input bg-background text-center text-lg font-bold tabular-nums focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              >
+            </div>
+
+            <div class="flex items-center justify-between gap-3 rounded-xl bg-secondary/40 px-4 py-3">
+              <div class="min-w-0">
+                <p class="text-sm font-medium">
+                  Resultado (ganador o empate)
+                </p>
+                <p class="text-xs text-muted-foreground">
+                  Acertás quién gana o el empate.
+                </p>
+              </div>
+              <input
+                v-model.number="editRules.correct_result"
+                type="number"
+                min="0"
+                max="100"
+                aria-label="Puntos por resultado correcto"
+                class="size-12 shrink-0 rounded-lg border border-input bg-background text-center text-lg font-bold tabular-nums focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              >
+            </div>
+
+            <p class="text-xs text-muted-foreground">
+              Las reglas solo se pueden editar antes de que arranque el torneo.
+            </p>
+          </div>
+
+          <p
+            v-if="editError"
+            class="text-sm text-destructive"
+            role="alert"
+          >
+            {{ editError }}
+          </p>
+
+          <div class="flex items-center gap-2 border-t border-border pt-4">
+            <Button
+              type="button"
+              :disabled="editSubmitting"
+              @click="saveEdit"
+            >
+              {{ editSubmitting ? 'Guardando…' : 'Guardar' }}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              :disabled="editSubmitting"
+              @click="cancelEdit"
+            >
+              Cancelar
+            </Button>
+          </div>
+        </section>
 
         <!-- Members -->
         <section class="space-y-4 rounded-2xl border border-border bg-card p-5 shadow-xl">

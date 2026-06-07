@@ -38,5 +38,9 @@ export function useRoom(fetchImpl?: typeof $fetch) {
       code: string,
       payload: Parameters<typeof client.joinByCode>[1],
     ) => with401Guard(() => client.joinByCode(code, payload)),
+    updateRoom: (
+      id: string,
+      input: Parameters<typeof client.updateRoom>[1],
+    ) => with401Guard(() => client.updateRoom(id, input)),
   }
 }
