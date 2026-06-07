@@ -1,9 +1,9 @@
 import { serverSupabaseServiceRole } from '#supabase/server'
-import type { Database } from '~~/shared/types/database.types'
+import type { Database } from '#shared/types/database.types'
 import {
   getRoomPreviewHandler,
   RoomNotFoundError,
-} from '../../handlers/get-room-preview'
+} from '#server/handlers/get-room-preview'
 
 export default defineEventHandler(async (event) => {
   const code = getRouterParam(event, 'code')

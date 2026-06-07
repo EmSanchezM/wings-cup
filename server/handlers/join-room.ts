@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Database } from '../../shared/types/database.types'
+import type { Database } from '#shared/types/database.types'
 
 export class RoomNotFoundError extends Error {
   readonly code = 'ROOM_NOT_FOUND' as const

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { Trophy, Shield, LogOut, ArrowLeft, CalendarClock } from 'lucide-vue-next'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import { Button } from '~/components/ui/button'
+import { Badge } from '~/components/ui/badge'
 
 const supabase = useSupabaseClient()
 const user = useSupabaseUser()

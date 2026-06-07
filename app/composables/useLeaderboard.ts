@@ -1,7 +1,7 @@
 import { ref } from 'vue'
-import { makeLeaderboardClient } from '../utils/leaderboard-client'
-import type { LeaderboardEntry } from '../../shared/types/leaderboard'
-import type { RoomMember } from '../../shared/types/rooms'
+import { makeLeaderboardClient } from '~/utils/leaderboard-client'
+import type { LeaderboardEntry } from '#shared/types/leaderboard'
+import type { RoomMember } from '#shared/types/rooms'
 
 export function applyMemberUpdate(
   prev: LeaderboardEntry[],

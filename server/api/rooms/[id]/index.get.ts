@@ -1,6 +1,6 @@
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
-import type { Database } from '~~/shared/types/database.types'
-import { getRoomHandler, RoomNotFoundError } from '../../../handlers/get-room'
+import type { Database } from '#shared/types/database.types'
+import { getRoomHandler, RoomNotFoundError } from '#server/handlers/get-room'
 
 export default defineEventHandler(async (event) => {
   const user = await serverSupabaseUser(event)

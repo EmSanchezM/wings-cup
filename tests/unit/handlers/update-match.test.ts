@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Database } from '../../../shared/types/database.types'
-import { updateMatchHandler } from '../../../server/handlers/update-match'
+import type { Database } from '#shared/types/database.types'
+import { updateMatchHandler } from '#server/handlers/update-match'
 
 type SingleResult<T> = { data: T | null; error: { message: string } | null }
 type InsertResult = { error: { message: string } | null }

@@ -1,8 +1,8 @@
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
-import type { Database } from '~~/shared/types/database.types'
-import { createRoomSchema } from '~~/shared/schemas/room.schema'
-import { createRoomHandler } from '../../handlers/create-room'
-import { InviteCodeCollisionError } from '../../utils/invite-code'
+import type { Database } from '#shared/types/database.types'
+import { createRoomSchema } from '#shared/schemas/room.schema'
+import { createRoomHandler } from '#server/handlers/create-room'
+import { InviteCodeCollisionError } from '#server/utils/invite-code'
 
 export default defineEventHandler(async (event) => {
   const user = await serverSupabaseUser(event)

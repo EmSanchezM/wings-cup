@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Database } from '../../shared/types/database.types'
-import type { Match, MatchUpdate } from '../../shared/types/matches'
+import type { Database } from '#shared/types/database.types'
+import type { Match, MatchUpdate } from '#shared/types/matches'
 import { writeAuditLog } from './audit-log'
 
 export interface UpdateMatchDeps {

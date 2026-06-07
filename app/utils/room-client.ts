@@ -1,11 +1,11 @@
-import type { CreateRoomInput } from '../../shared/schemas/room.schema'
-import type { JoinPayload } from '../../shared/schemas/join.schema'
+import type { CreateRoomInput } from '#shared/schemas/room.schema'
+import type { JoinPayload } from '#shared/schemas/join.schema'
 import type {
   Room,
   RoomListItem,
   RoomMemberView,
   RoomPreview,
-} from '../../shared/types/rooms'
+} from '#shared/types/rooms'
 
 export function makeRoomClient(fetchImpl: typeof $fetch) {
   return {

@@ -2,9 +2,9 @@ import {
   serverSupabaseServiceRole,
   serverSupabaseUser,
 } from '#supabase/server'
-import { requireSuperAdmin } from '../../../utils/auth'
-import { lockStartedPredictionsHandler } from '../../../handlers/lock-started-predictions'
-import type { Database } from '~~/shared/types/database.types'
+import { requireSuperAdmin } from '#server/utils/auth'
+import { lockStartedPredictionsHandler } from '#server/handlers/lock-started-predictions'
+import type { Database } from '#shared/types/database.types'
 
 export default defineEventHandler(async (event) => {
   await requireSuperAdmin(event)

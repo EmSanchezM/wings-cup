@@ -20,7 +20,7 @@ vi.mock('vue', () => ({
 // Fixtures
 // ---------------------------------------------------------------------------
 
-import type { MatchListItem } from '../../shared/types/matches'
+import type { MatchListItem } from '#shared/types/matches'
 
 function makeMatch(overrides: Partial<MatchListItem> = {}): MatchListItem {
   return {

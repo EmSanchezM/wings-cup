@@ -3,9 +3,9 @@ import {
   serverSupabaseServiceRole,
   serverSupabaseUser,
 } from '#supabase/server'
-import type { Database } from '~~/shared/types/database.types'
-import { joinPayloadSchema } from '~~/shared/schemas/join.schema'
-import { joinRoomHandler, RoomNotFoundError } from '../../handlers/join-room'
+import type { Database } from '#shared/types/database.types'
+import { joinPayloadSchema } from '#shared/schemas/join.schema'
+import { joinRoomHandler, RoomNotFoundError } from '#server/handlers/join-room'
 
 export default defineEventHandler(async (event) => {
   const user = await serverSupabaseUser(event)

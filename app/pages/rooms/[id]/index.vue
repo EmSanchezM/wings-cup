@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { Trophy, Users, Flag, BarChart3, Copy, Check } from 'lucide-vue-next'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import type { Room, RoomMemberView } from '~~/shared/types/rooms'
+import { Button } from '~/components/ui/button'
+import { Badge } from '~/components/ui/badge'
+import type { Room, RoomMemberView } from '#shared/types/rooms'
 
 // Auth enforced by @nuxtjs/supabase redirectOptions (covers /rooms/**)
 const route = useRoute()

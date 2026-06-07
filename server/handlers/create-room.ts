@@ -1,9 +1,9 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Database } from '../../shared/types/database.types'
-import type { Room } from '../../shared/types/rooms'
-import type { CreateRoomInput } from '../../shared/schemas/room.schema'
-import { defaultScoringRules } from '../../shared/schemas/scoring-rules.schema'
-import { generateInviteCode } from '../utils/invite-code'
+import type { Database } from '#shared/types/database.types'
+import type { Room } from '#shared/types/rooms'
+import type { CreateRoomInput } from '#shared/schemas/room.schema'
+import { defaultScoringRules } from '#shared/schemas/scoring-rules.schema'
+import { generateInviteCode } from '#server/utils/invite-code'
 
 export interface CreateRoomDeps {
   supabase: SupabaseClient<Database>

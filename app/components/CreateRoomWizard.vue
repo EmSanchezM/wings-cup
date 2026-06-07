@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { ref, reactive, computed } from 'vue'
 import { PlusCircle, ChevronLeft, ChevronRight, Check, Sparkles } from 'lucide-vue-next'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { defaultScoringRules } from '~~/shared/schemas/scoring-rules.schema'
-import type { CreateRoomInput } from '~~/shared/schemas/room.schema'
+import { Button } from '~/components/ui/button'
+import { Input } from '~/components/ui/input'
+import { defaultScoringRules } from '#shared/schemas/scoring-rules.schema'
+import type { CreateRoomInput } from '#shared/schemas/room.schema'
 
 const props = defineProps<{
   submitting: boolean

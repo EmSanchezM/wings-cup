@@ -2,10 +2,10 @@ import {
   serverSupabaseServiceRole,
   serverSupabaseUser,
 } from '#supabase/server'
-import { requireSuperAdmin } from '../../../utils/auth'
-import { updateMatchHandler } from '../../../handlers/update-match'
-import { UpdateMatchSchema } from '~~/shared/schemas/match.schema'
-import type { Database } from '~~/shared/types/database.types'
+import { requireSuperAdmin } from '#server/utils/auth'
+import { updateMatchHandler } from '#server/handlers/update-match'
+import { UpdateMatchSchema } from '#shared/schemas/match.schema'
+import type { Database } from '#shared/types/database.types'
 
 export default defineEventHandler(async (event) => {
   await requireSuperAdmin(event)

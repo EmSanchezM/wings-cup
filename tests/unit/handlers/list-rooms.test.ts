@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Database } from '../../../shared/types/database.types'
-import { listRoomsHandler } from '../../../server/handlers/list-rooms'
+import type { Database } from '#shared/types/database.types'
+import { listRoomsHandler } from '#server/handlers/list-rooms'
 
 type SelectResult = { data: unknown[] | null; error: { message: string } | null }
 

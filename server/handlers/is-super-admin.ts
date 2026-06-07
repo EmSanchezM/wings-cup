@@ -1,5 +1,10 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Database } from '../../shared/types/database.types'
+import type { Database } from '#shared/types/database.types'
+
+type IsSuperAdminHander = {
+  isSuperAdmin: boolean;
+  reason: 'authorized' | 'unauthenticated' | 'forbidden';
+}
 
 /**
  * isSuperAdminHandler — pure handler for GET /api/me/is-super-admin (R-ADMIN-05)
@@ -14,7 +19,7 @@ import type { Database } from '../../shared/types/database.types'
 export async function isSuperAdminHandler(opts: {
   userId: string | null
   supabase: SupabaseClient<Database>
-}): Promise<{ isSuperAdmin: boolean; reason: 'authorized' | 'unauthenticated' | 'forbidden' }> {
+}): Promise<IsSuperAdminHander> {
   const { userId, supabase } = opts
 
   if (!userId) {

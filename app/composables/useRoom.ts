@@ -1,4 +1,4 @@
-import { makeRoomClient } from '../utils/room-client'
+import { makeRoomClient } from '~/utils/room-client'
 
 /**
  * useRoom — wraps makeRoomClient with 401-aware error handling (R-UX-03).

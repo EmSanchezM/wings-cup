@@ -1,10 +1,10 @@
 import { describe, it, expect, vi } from 'vitest'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Database } from '../../../shared/types/database.types'
+import type { Database } from '#shared/types/database.types'
 import {
   getRoomPreviewHandler,
   RoomNotFoundError,
-} from '../../../server/handlers/get-room-preview'
+} from '#server/handlers/get-room-preview'
 
 type PreviewRow = {
   name: string

@@ -20,8 +20,8 @@ vi.mock('vue', () => ({
 // Fixtures
 // ---------------------------------------------------------------------------
 
-import type { LeaderboardEntry } from '../../shared/types/leaderboard'
-import type { RoomMember } from '../../shared/types/rooms'
+import type { LeaderboardEntry } from '#shared/types/leaderboard'
+import type { RoomMember } from '#shared/types/rooms'
 
 function makeEntry(overrides: Partial<LeaderboardEntry> = {}): LeaderboardEntry {
   return {

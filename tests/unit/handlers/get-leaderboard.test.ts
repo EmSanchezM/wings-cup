@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Database } from '../../../shared/types/database.types'
-import { getLeaderboardHandler } from '../../../server/handlers/get-leaderboard'
+import type { Database } from '#shared/types/database.types'
+import { getLeaderboardHandler } from '#server/handlers/get-leaderboard'
 
 const ROOM_ID = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
 const USER_ID = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'

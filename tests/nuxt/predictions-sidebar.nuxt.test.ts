@@ -10,8 +10,8 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { ref } from 'vue'
 import { mountSuspended, mockNuxtImport } from '@nuxt/test-utils/runtime'
 import { flushPromises } from '@vue/test-utils'
-import type { MatchListItem } from '../../shared/types/matches'
-import type { Prediction } from '../../shared/types/predictions'
+import type { MatchListItem } from '#shared/types/matches'
+import type { Prediction } from '#shared/types/predictions'
 
 const ROOM_ID = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
 

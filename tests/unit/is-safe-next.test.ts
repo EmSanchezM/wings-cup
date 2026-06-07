@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { isSafeNext } from '../../app/utils/is-safe-next'
+import { isSafeNext } from '~/utils/is-safe-next'
 
 describe('isSafeNext (R-INV-07, R-SEC-42)', () => {
   describe('accepts', () => {

@@ -1,10 +1,10 @@
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
-import type { Database } from '~~/shared/types/database.types'
-import { UpsertPredictionSchema } from '~~/shared/schemas/prediction.schema'
+import type { Database } from '#shared/types/database.types'
+import { UpsertPredictionSchema } from '#shared/schemas/prediction.schema'
 import {
   upsertPredictionHandler,
   PredictionLockedError,
-} from '../../../handlers/upsert-prediction'
+} from '#server/handlers/upsert-prediction'
 
 export default defineEventHandler(async (event) => {
   const user = await serverSupabaseUser(event)

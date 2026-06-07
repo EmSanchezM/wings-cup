@@ -1,4 +1,4 @@
-import type { LeaderboardEntry } from '../../shared/types/leaderboard'
+import type { LeaderboardEntry } from '#shared/types/leaderboard'
 
 export function makeLeaderboardClient(fetchImpl: typeof $fetch) {
   return {

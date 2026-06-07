@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
 import { Shield, Lock, Clock, Pencil, ChevronLeft, ChevronRight, CalendarDays, HelpCircle, ChevronDown } from 'lucide-vue-next'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
-import type { MatchListItem, MatchUpdate } from '~~/shared/types/matches'
+import { Button } from '~/components/ui/button'
+import { Input } from '~/components/ui/input'
+import { Badge } from '~/components/ui/badge'
+import type { MatchListItem, MatchUpdate } from '#shared/types/matches'
 
 definePageMeta({ layout: 'admin' })
 

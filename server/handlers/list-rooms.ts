@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Database } from '../../shared/types/database.types'
-import type { RoomListItem } from '../../shared/types/rooms'
+import type { Database } from '#shared/types/database.types'
+import type { RoomListItem } from '#shared/types/rooms'
 
 const ROOM_LIST_COLUMNS = 'id, name, prize_description, invite_code, status, created_at'
 

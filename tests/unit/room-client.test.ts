@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { makeRoomClient } from '../../app/utils/room-client'
+import { makeRoomClient } from '~/utils/room-client'
 
 type MockFetch = ReturnType<typeof vi.fn>
 

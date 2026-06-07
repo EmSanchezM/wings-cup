@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import { Flag, Trophy, ArrowRight, ChevronLeft, ChevronRight, CalendarDays } from 'lucide-vue-next'
-import { Button } from '@/components/ui/button'
+import { Button } from '~/components/ui/button'
 import { makePredictionClient } from '~/utils/prediction-client'
 import { useMatches, applyMatchUpdate } from '~/composables/useMatches'
 import { useLeaderboard } from '~/composables/useLeaderboard'
 import MatchPredictionCard from '~/components/MatchPredictionCard.vue'
-import type { MatchListItem } from '~~/shared/types/matches'
-import type { Prediction } from '~~/shared/types/predictions'
+import type { MatchListItem } from '#shared/types/matches'
+import type { Prediction } from '#shared/types/predictions'
 
 const route = useRoute()
 const roomId = route.params.id as string

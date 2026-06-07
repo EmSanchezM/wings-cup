@@ -7,7 +7,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { flushPromises } from '@vue/test-utils'
-import type { LeaderboardEntry } from '../../shared/types/leaderboard'
+import type { LeaderboardEntry } from '#shared/types/leaderboard'
 
 // ---------------------------------------------------------------------------
 // Mock useRoute

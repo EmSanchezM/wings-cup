@@ -1,6 +1,6 @@
 import { ref } from 'vue'
-import { makeMatchesClient, type MatchFilters } from '../utils/match-client'
-import type { MatchListItem } from '../../shared/types/matches'
+import { makeMatchesClient, type MatchFilters } from '~/utils/match-client'
+import type { MatchListItem } from '#shared/types/matches'
 
 // ---------------------------------------------------------------------------
 // Pure reducer — exported for testing (D6a)

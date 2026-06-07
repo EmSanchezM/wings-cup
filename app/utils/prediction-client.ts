@@ -1,4 +1,4 @@
-import type { UpsertPredictionInput, Prediction } from '../../shared/types/predictions'
+import type { UpsertPredictionInput, Prediction } from '#shared/types/predictions'
 
 export function makePredictionClient(fetchImpl: typeof $fetch) {
   return {

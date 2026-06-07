@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { flagSrc, teamInitials } from '~~/shared/constants/team-flags'
+import { flagSrc, teamInitials } from '#shared/constants/team-flags'
 
 const props = withDefaults(
   defineProps<{

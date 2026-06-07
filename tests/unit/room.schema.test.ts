@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { createRoomSchema } from '../../shared/schemas/room.schema'
-import { defaultScoringRules } from '../../shared/schemas/scoring-rules.schema'
+import { createRoomSchema } from '#shared/schemas/room.schema'
+import { defaultScoringRules } from '#shared/schemas/scoring-rules.schema'
 
 describe('createRoomSchema (R-ROOMS-07)', () => {
   it('accepts a minimal valid payload', () => {

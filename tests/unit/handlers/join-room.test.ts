@@ -1,10 +1,10 @@
 import { describe, it, expect, vi } from 'vitest'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Database } from '../../../shared/types/database.types'
+import type { Database } from '#shared/types/database.types'
 import {
   joinRoomHandler,
   RoomNotFoundError,
-} from '../../../server/handlers/join-room'
+} from '#server/handlers/join-room'
 
 type RoomLookup = { data: { id: string; status: string } | null; error: { message: string } | null }
 type InsertResult = { error: { code?: string; message: string } | null }

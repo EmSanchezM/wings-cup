@@ -10,8 +10,8 @@ import { describe, it, expect, beforeAll, vi, beforeEach } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { flushPromises } from '@vue/test-utils'
 import type { VueWrapper } from '@vue/test-utils'
-import type { MatchListItem } from '../../shared/types/matches'
-import type { Prediction } from '../../shared/types/predictions'
+import type { MatchListItem } from '#shared/types/matches'
+import type { Prediction } from '#shared/types/predictions'
 
 // ---------------------------------------------------------------------------
 // Shared fixtures

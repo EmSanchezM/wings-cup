@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { UpsertPredictionSchema } from '../../shared/schemas/prediction.schema'
+import { UpsertPredictionSchema } from '#shared/schemas/prediction.schema'
 
 describe('UpsertPredictionSchema (R-PRED-04)', () => {
   const VALID_UUID = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'

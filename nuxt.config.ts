@@ -15,13 +15,8 @@ export default defineNuxtConfig({
   runtimeConfig: {
     // SERVER-ONLY: these never reach the client bundle.
     // Env convention: NUXT_* (without PUBLIC_) → top-level runtimeConfig.* (server-only).
-    supabaseServiceKey: '', // env: NUXT_SUPABASE_SERVICE_KEY
     cronSecret: '', // env: NUXT_CRON_SECRET
-    apiFootballKey: '', // env: NUXT_API_FOOTBALL_KEY (used in slice 3 — matches sync)
-    public: {
-      // safe-to-expose values only.
-      // @nuxtjs/supabase reads NUXT_PUBLIC_SUPABASE_URL and NUXT_PUBLIC_SUPABASE_KEY itself.
-    },
+    public: {},
   },
 
   future: { compatibilityVersion: 4 },

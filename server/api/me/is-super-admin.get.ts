@@ -1,5 +1,5 @@
 import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
-import { isSuperAdminHandler } from '../../handlers/is-super-admin'
+import { isSuperAdminHandler } from '#server/handlers/is-super-admin'
 
 /**
  * GET /api/me/is-super-admin (R-ADMIN-05)

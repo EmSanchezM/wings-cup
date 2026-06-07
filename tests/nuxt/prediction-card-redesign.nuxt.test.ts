@@ -8,7 +8,7 @@
  */
 import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
-import type { MatchListItem } from '../../shared/types/matches'
+import type { MatchListItem } from '#shared/types/matches'
 
 const ROOM_ID = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
 

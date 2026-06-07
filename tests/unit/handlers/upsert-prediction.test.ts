@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Database } from '../../../shared/types/database.types'
-import { upsertPredictionHandler } from '../../../server/handlers/upsert-prediction'
+import type { Database } from '#shared/types/database.types'
+import { upsertPredictionHandler } from '#server/handlers/upsert-prediction'
 
 const ROOM_ID = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
 const USER_ID = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'

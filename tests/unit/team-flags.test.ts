@@ -14,7 +14,7 @@
  *   05: initials fallback derives up to 2 uppercase letters
  */
 import { describe, it, expect } from 'vitest'
-import { flagCode, flagSrc, teamInitials, TEAM_FLAG_CODES } from '../../shared/constants/team-flags'
+import { flagCode, flagSrc, teamInitials, TEAM_FLAG_CODES } from '#shared/constants/team-flags'
 
 describe('team-flags mapping', () => {
   it('01: known country resolves to ISO code and /flags path', () => {

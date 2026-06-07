@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vitest/config'
 import { defineVitestProject } from '@nuxt/test-utils/config'
 
@@ -8,6 +9,14 @@ export default defineConfig({
     projects: [
       // Unit tests — plain Node environment, no Nuxt runtime
       {
+        resolve: {
+          alias: {
+            '#shared': fileURLToPath(new URL('./shared', import.meta.url)),
+            '#server': fileURLToPath(new URL('./server', import.meta.url)),
+            '~': fileURLToPath(new URL('./app', import.meta.url)),
+            '@': fileURLToPath(new URL('./app', import.meta.url)),
+          },
+        },
         test: {
           name: 'unit',
           include: ['tests/unit/**/*.test.ts'],

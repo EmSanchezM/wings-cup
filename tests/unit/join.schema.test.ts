@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { joinPayloadSchema } from '../../shared/schemas/join.schema'
+import { joinPayloadSchema } from '#shared/schemas/join.schema'
 
 describe('joinPayloadSchema (R-INV-09 / design §4.3)', () => {
   describe('magic_link branch', () => {

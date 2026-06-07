@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Database } from '../../shared/types/database.types'
-import type { LeaderboardEntry } from '../../shared/types/leaderboard'
+import type { Database } from '#shared/types/database.types'
+import type { LeaderboardEntry } from '#shared/types/leaderboard'
 
 export interface GetLeaderboardDeps {
   supabase: SupabaseClient<Database>

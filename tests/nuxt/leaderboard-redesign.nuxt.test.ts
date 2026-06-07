@@ -10,8 +10,8 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { ref } from 'vue'
 import { mountSuspended, mockNuxtImport } from '@nuxt/test-utils/runtime'
 import { flushPromises } from '@vue/test-utils'
-import type { LeaderboardEntry } from '../../shared/types/leaderboard'
-import type { MatchListItem } from '../../shared/types/matches'
+import type { LeaderboardEntry } from '#shared/types/leaderboard'
+import type { MatchListItem } from '#shared/types/matches'
 
 const ROOM_ID = 'room-test-0001'
 

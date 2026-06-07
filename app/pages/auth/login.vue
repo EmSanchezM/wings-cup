@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { Button } from '~/components/ui/button'
+import { Input } from '~/components/ui/input'
 
 definePageMeta({ layout: false })
 

@@ -1,4 +1,4 @@
-import type { MatchListItem, MatchUpdate, Match } from '../../shared/types/matches'
+import type { MatchListItem, MatchUpdate, Match } from '#shared/types/matches'
 
 export interface MatchFilters {
   stage?: string

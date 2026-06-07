@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { scoringRulesSchema, defaultScoringRules } from '../../shared/schemas/scoring-rules.schema'
+import { scoringRulesSchema, defaultScoringRules } from '#shared/schemas/scoring-rules.schema'
 
 describe('scoringRulesSchema', () => {
   it('parses valid input with all fields', () => {

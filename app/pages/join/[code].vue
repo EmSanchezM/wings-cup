@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import type { RoomPreview } from '~~/shared/types/rooms'
+import { Button } from '~/components/ui/button'
+import { Input } from '~/components/ui/input'
+import type { RoomPreview } from '#shared/types/rooms'
 
 definePageMeta({
   layout: false,

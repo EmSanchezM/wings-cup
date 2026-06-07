@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { LeaderboardEntrySchema } from '../../shared/schemas/leaderboard.schema'
+import { LeaderboardEntrySchema } from '#shared/schemas/leaderboard.schema'
 
 describe('LeaderboardEntrySchema (R-LEAD-03)', () => {
   const VALID_ENTRY = {

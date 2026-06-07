@@ -3,9 +3,9 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { Trophy, Medal } from 'lucide-vue-next'
 import { useLeaderboard, applyMemberUpdate } from '~/composables/useLeaderboard'
 import { useMatches } from '~/composables/useMatches'
-import type { RoomMember } from '~~/shared/types/rooms'
-import type { MatchListItem } from '~~/shared/types/matches'
-import type { LeaderboardEntry } from '~~/shared/types/leaderboard'
+import type { RoomMember } from '#shared/types/rooms'
+import type { MatchListItem } from '#shared/types/matches'
+import type { LeaderboardEntry } from '#shared/types/leaderboard'
 
 const route = useRoute()
 const roomId = route.params.id as string

@@ -1,6 +1,6 @@
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
-import type { Database } from '~~/shared/types/database.types'
-import { getLeaderboardHandler } from '../../../handlers/get-leaderboard'
+import type { Database } from '#shared/types/database.types'
+import { getLeaderboardHandler } from '#server/handlers/get-leaderboard'
 
 export default defineEventHandler(async (event) => {
   const user = await serverSupabaseUser(event)

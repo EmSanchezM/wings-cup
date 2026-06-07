@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { Clock } from 'lucide-vue-next'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
+import { Badge } from '~/components/ui/badge'
+import { Button } from '~/components/ui/button'
 import { makePredictionClient } from '~/utils/prediction-client'
-import type { MatchListItem } from '~~/shared/types/matches'
-import type { Prediction } from '~~/shared/types/predictions'
+import type { MatchListItem } from '#shared/types/matches'
+import type { Prediction } from '#shared/types/predictions'
 
 const props = defineProps<{
   match: MatchListItem

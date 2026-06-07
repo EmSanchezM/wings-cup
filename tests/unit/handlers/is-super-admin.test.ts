@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Database } from '../../../shared/types/database.types'
+import type { Database } from '#shared/types/database.types'
 
 /**
  * Unit tests for the discriminated /api/me/is-super-admin endpoint logic.
@@ -16,7 +16,7 @@ import type { Database } from '../../../shared/types/database.types'
 
 // We test the handler logic function, not the Nitro event handler.
 // Import the handler from server/handlers/is-super-admin.ts
-import { isSuperAdminHandler } from '../../../server/handlers/is-super-admin'
+import { isSuperAdminHandler } from '#server/handlers/is-super-admin'
 
 type MockSupabaseClient = Pick<SupabaseClient<Database>, 'from'>
 

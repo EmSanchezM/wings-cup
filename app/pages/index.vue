@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Trophy, PlusCircle, UserPlus, Flag, ArrowRight } from 'lucide-vue-next'
-import { Button } from '@/components/ui/button'
+import { Button } from '~/components/ui/button'
 
 definePageMeta({ layout: false })
 

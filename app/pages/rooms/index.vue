@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { LayoutGrid, Trophy, Copy, Check } from 'lucide-vue-next'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { createRoomSchema } from '~~/shared/schemas/room.schema'
-import type { CreateRoomInput } from '~~/shared/schemas/room.schema'
-import type { RoomListItem } from '~~/shared/types/rooms'
+import { Button } from '~/components/ui/button'
+import { Badge } from '~/components/ui/badge'
+import { createRoomSchema } from '#shared/schemas/room.schema'
+import type { CreateRoomInput } from '#shared/schemas/room.schema'
+import type { RoomListItem } from '#shared/types/rooms'
 
 // Auth enforced by @nuxtjs/supabase redirectOptions (covers /rooms/**)
 const roomClient = useRoom()

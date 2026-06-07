@@ -1,10 +1,10 @@
 import { describe, it, expect, vi } from 'vitest'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Database } from '../../shared/types/database.types'
+import type { Database } from '#shared/types/database.types'
 import {
   generateInviteCode,
   InviteCodeCollisionError,
-} from '../../server/utils/invite-code'
+} from '#server/utils/invite-code'
 
 type MaybeSingleResult = { data: { invite_code: string } | null; error: null }
 

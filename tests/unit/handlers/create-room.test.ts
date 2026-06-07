@@ -1,8 +1,8 @@
 import { describe, it, expect, vi } from 'vitest'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Database } from '../../../shared/types/database.types'
-import { createRoomHandler } from '../../../server/handlers/create-room'
-import { InviteCodeCollisionError } from '../../../server/utils/invite-code'
+import type { Database } from '#shared/types/database.types'
+import { createRoomHandler } from '#server/handlers/create-room'
+import { InviteCodeCollisionError } from '#server/utils/invite-code'
 
 type LookupResult = { data: { invite_code: string } | null, error: null }
 type InsertResult = { error: { message: string } | null }

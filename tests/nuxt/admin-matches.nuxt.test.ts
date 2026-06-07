@@ -7,10 +7,9 @@
  * handler unit tests; here we only assert the restyled, script-invariant view.
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { ref } from 'vue'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { flushPromises } from '@vue/test-utils'
-import type { MatchListItem } from '../../shared/types/matches'
+import type { MatchListItem } from '#shared/types/matches'
 
 const match: MatchListItem = {
   id: '11111111-1111-4111-8111-111111111111',
@@ -72,11 +71,11 @@ describe('admin/matches/index.vue — restyle (R-UX-08)', () => {
     const wrapper = await mountSuspended(Page)
     await flushPromises()
     // open the edit form
-    const editBtn = wrapper.findAll('button').find((b) => b.text().includes('Editar'))
+    const editBtn = wrapper.findAll('button').find(b => b.text().includes('Editar'))
     expect(editBtn).toBeTruthy()
     await editBtn!.trigger('click')
     await flushPromises()
-    const optionValues = wrapper.findAll('option').map((o) => o.attributes('value'))
+    const optionValues = wrapper.findAll('option').map(o => o.attributes('value'))
     expect(optionValues).toEqual(expect.arrayContaining(['scheduled', 'live', 'finished', 'postponed']))
   })
 })

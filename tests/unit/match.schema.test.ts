@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { MatchSchema, UpdateMatchSchema } from '../../shared/schemas/match.schema'
+import { MatchSchema, UpdateMatchSchema } from '#shared/schemas/match.schema'
 
 describe('MatchSchema (R-MATCHES-02, R-MATCHES-04)', () => {
   it('accepts a valid scheduled match row', () => {

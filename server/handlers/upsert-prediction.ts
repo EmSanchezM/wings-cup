@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Database } from '../../shared/types/database.types'
-import type { UpsertPredictionInput, Prediction } from '../../shared/types/predictions'
+import type { Database } from '#shared/types/database.types'
+import type { UpsertPredictionInput, Prediction } from '#shared/types/predictions'
 
 export class PredictionLockedError extends Error {
   constructor() {
