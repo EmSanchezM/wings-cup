@@ -241,7 +241,7 @@ otp_expiry = 3600
 # Invite email template — token_hash flow (R-PS-10, R-AUTH-10)
 [auth.email.template.invite]
 subject = "Te invitaron a Wings Cup"
-content_path = "./templates/invite.html"
+content_path = "./supabase/templates/invite.html"
 
 # Uncomment to customize notification email template
 # [auth.email.notification.password_changed]

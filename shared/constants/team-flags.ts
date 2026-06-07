@@ -1,56 +1,78 @@
 /**
- * Source of truth: World Cup 2026 country name → ISO 3166-1 alpha-2 code.
+ * Source of truth: World Cup 2026 country name (Spanish) → ISO 3166-1 alpha-2 code.
  *
- * Match data stores country NAMES (matches.home_team/away_team), not codes,
- * so this map is the single place that bridges name → flag asset. Flags are
+ * Match data stores country NAMES (matches.home_team/away_team) in Spanish, so
+ * this map is the single place that bridges name → flag asset. Flags are
  * vendored SVGs in `public/flags/{code}.svg` (circle-flags, MIT).
  *
  * Keys MUST match the exact names used in `supabase/seeds/matches.sql`.
- * Knockout placeholders ("Group A Winner", "Winner Match 49", "Loser Match 61")
+ * Knockout placeholders ("2do A", "1ro E", "Ganador P73", "Perdedor P101")
  * are intentionally absent — they have no country, so the UI falls back to
  * initials. Add a key here when a new participant name enters the data.
+ *
+ * 48 teams across 12 groups (A–L), per the December 2025 final draw.
  */
 export const TEAM_FLAG_CODES: Record<string, string> = {
-  // Group A
+  // Grupo A
   Mexico: 'mx',
-  Ecuador: 'ec',
-  USA: 'us',
+  Sudafrica: 'za',
+  'Corea del Sur': 'kr',
+  Chequia: 'cz',
+  // Grupo B
   Canada: 'ca',
-  // Group B
-  Argentina: 'ar',
-  Peru: 'pe',
-  Chile: 'cl',
-  Bolivia: 'bo',
-  // Group C
-  Brazil: 'br',
-  Venezuela: 've',
-  Colombia: 'co',
+  'Bosnia y Herzegovina': 'ba',
+  Suiza: 'ch',
+  Qatar: 'qa',
+  // Grupo C
+  Brasil: 'br',
+  Marruecos: 'ma',
+  Haiti: 'ht',
+  Escocia: 'gb-sct',
+  // Grupo D
+  'Estados Unidos': 'us',
   Paraguay: 'py',
-  // Group D
-  France: 'fr',
   Australia: 'au',
-  Belgium: 'be',
-  'New Zealand': 'nz',
-  // Group E
-  Germany: 'de',
-  Japan: 'jp',
-  Spain: 'es',
-  'Costa Rica': 'cr',
-  // Group F
-  Portugal: 'pt',
-  Algeria: 'dz',
-  Morocco: 'ma',
-  Senegal: 'sn',
-  // Group G
-  England: 'gb-eng',
-  Serbia: 'rs',
-  Netherlands: 'nl',
-  Ukraine: 'ua',
-  // Group H
-  Italy: 'it',
-  'Saudi Arabia': 'sa',
-  'South Korea': 'kr',
+  Turquia: 'tr',
+  // Grupo E
+  Alemania: 'de',
+  Curazao: 'cw',
+  'Costa de Marfil': 'ci',
+  Ecuador: 'ec',
+  // Grupo F
+  'Paises Bajos': 'nl',
+  Japon: 'jp',
+  Suecia: 'se',
+  Tunez: 'tn',
+  // Grupo G
+  Belgica: 'be',
+  Egipto: 'eg',
   Iran: 'ir',
+  'Nueva Zelanda': 'nz',
+  // Grupo H
+  Espana: 'es',
+  'Cabo Verde': 'cv',
+  'Arabia Saudita': 'sa',
+  Uruguay: 'uy',
+  // Grupo I
+  Francia: 'fr',
+  Senegal: 'sn',
+  Irak: 'iq',
+  Noruega: 'no',
+  // Grupo J
+  Argentina: 'ar',
+  Argelia: 'dz',
+  Austria: 'at',
+  Jordania: 'jo',
+  // Grupo K
+  Portugal: 'pt',
+  'RD Congo': 'cd',
+  Uzbekistan: 'uz',
+  Colombia: 'co',
+  // Grupo L
+  Inglaterra: 'gb-eng',
+  Croacia: 'hr',
+  Ghana: 'gh',
+  Panama: 'pa',
 }
 
 /** ISO code for a team name, or null when the name has no flag (knockout placeholder / unknown). */
