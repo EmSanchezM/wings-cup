@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, reactive } from 'vue'
-import { Trophy, Users, Flag, BarChart3, Copy, Check, Pencil } from 'lucide-vue-next'
+import { Trophy, Users, Flag, BarChart3, Copy, Check, Pencil, Target } from 'lucide-vue-next'
 import { Button } from '~/components/ui/button'
 import { Badge } from '~/components/ui/badge'
 import { Input } from '~/components/ui/input'
@@ -22,6 +22,20 @@ const error = ref<string | null>(null)
 
 const isOwner = computed(() => !!user.value?.id && room.value?.created_by === user.value.id)
 const canEdit = computed(() => isOwner.value || isSuperAdmin.value === true)
+
+// Read-only scoring rules for the member-facing display.
+// Cast through unknown to avoid TS2589 from Supabase's recursive Json type (see openEdit).
+const scoringRules = computed(() => {
+  const sr = (room.value as unknown as Record<string, unknown> | null)?.['scoring_rules'] as
+    | Record<string, number>
+    | null
+    | undefined
+  return {
+    exact_score: sr?.['exact_score'] ?? 5,
+    correct_goal_diff: sr?.['correct_goal_diff'] ?? 3,
+    correct_result: sr?.['correct_result'] ?? 1,
+  }
+})
 
 // Edit state
 const isEditing = ref(false)
@@ -342,6 +356,74 @@ onMounted(async () => {
               Cancelar
             </Button>
           </div>
+        </section>
+
+        <!-- Scoring rules (read-only, visible to every member) -->
+        <section
+          v-if="!isEditing"
+          class="space-y-4 rounded-2xl border border-border bg-card p-5 shadow-xl"
+        >
+          <div class="flex items-center gap-2.5">
+            <span class="flex size-9 items-center justify-center rounded-full bg-accent/10 text-accent">
+              <Target class="size-5" />
+            </span>
+            <h2 class="text-sm font-semibold">
+              Reglas de puntaje
+            </h2>
+          </div>
+
+          <ul class="space-y-2">
+            <li class="flex items-center justify-between gap-3 rounded-xl bg-secondary/40 px-4 py-3">
+              <div class="min-w-0">
+                <p class="text-sm font-medium">
+                  Marcador exacto
+                </p>
+                <p class="text-xs text-muted-foreground">
+                  Acertás el resultado completo.
+                </p>
+              </div>
+              <Badge
+                variant="accent"
+                class="shrink-0 font-mono text-sm tabular-nums"
+              >
+                +{{ scoringRules.exact_score }}
+              </Badge>
+            </li>
+
+            <li class="flex items-center justify-between gap-3 rounded-xl bg-secondary/40 px-4 py-3">
+              <div class="min-w-0">
+                <p class="text-sm font-medium">
+                  Diferencia de gol
+                </p>
+                <p class="text-xs text-muted-foreground">
+                  Acertás la diferencia pero no el marcador.
+                </p>
+              </div>
+              <Badge
+                variant="accent"
+                class="shrink-0 font-mono text-sm tabular-nums"
+              >
+                +{{ scoringRules.correct_goal_diff }}
+              </Badge>
+            </li>
+
+            <li class="flex items-center justify-between gap-3 rounded-xl bg-secondary/40 px-4 py-3">
+              <div class="min-w-0">
+                <p class="text-sm font-medium">
+                  Resultado (ganador o empate)
+                </p>
+                <p class="text-xs text-muted-foreground">
+                  Acertás quién gana o el empate.
+                </p>
+              </div>
+              <Badge
+                variant="accent"
+                class="shrink-0 font-mono text-sm tabular-nums"
+              >
+                +{{ scoringRules.correct_result }}
+              </Badge>
+            </li>
+          </ul>
         </section>
 
         <!-- Members -->
