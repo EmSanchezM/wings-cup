@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { createRoomSchema } from '#shared/schemas/room.schema'
+import { createRoomSchema, updateRoomSchema } from '#shared/schemas/room.schema'
 import { defaultScoringRules } from '#shared/schemas/scoring-rules.schema'
 
 describe('createRoomSchema (R-ROOMS-07)', () => {
@@ -99,5 +99,66 @@ describe('createRoomSchema (R-ROOMS-07)', () => {
       correct_goal_diff: 3,
       correct_result: 1,
     })
+  })
+})
+
+describe('updateRoomSchema', () => {
+  it('rejects empty object — at least one field required', () => {
+    expect(() => updateRoomSchema.parse({})).toThrow()
+  })
+
+  it('accepts name-only patch', () => {
+    const result = updateRoomSchema.parse({ name: 'New Name' })
+    expect(result.name).toBe('New Name')
+    expect(result.scoring_rules).toBeUndefined()
+  })
+
+  it('accepts prize_description-only patch', () => {
+    const result = updateRoomSchema.parse({ prize_description: 'Una birra' })
+    expect(result.prize_description).toBe('Una birra')
+  })
+
+  it('accepts scoring_rules-only patch with valid shape', () => {
+    const result = updateRoomSchema.parse({
+      scoring_rules: { exact_score: 10, correct_goal_diff: 4, correct_result: 2, wrong: 0 },
+    })
+    expect(result.scoring_rules).toMatchObject({
+      exact_score: 10,
+      correct_goal_diff: 4,
+      correct_result: 2,
+      wrong: 0,
+    })
+  })
+
+  it('trims whitespace from name', () => {
+    const result = updateRoomSchema.parse({ name: '  Trimmed  ' })
+    expect(result.name).toBe('Trimmed')
+  })
+
+  it('rejects name that exceeds 100 characters', () => {
+    expect(() => updateRoomSchema.parse({ name: 'x'.repeat(101) })).toThrow()
+  })
+
+  it('rejects prize_description that exceeds 500 characters', () => {
+    expect(() => updateRoomSchema.parse({ prize_description: 'x'.repeat(501) })).toThrow()
+  })
+
+  it('rejects scoring_rules with negative values', () => {
+    expect(() =>
+      updateRoomSchema.parse({
+        scoring_rules: { exact_score: -1, correct_goal_diff: 3, correct_result: 1, wrong: 0 },
+      }),
+    ).toThrow()
+  })
+
+  it('accepts all three fields together', () => {
+    const result = updateRoomSchema.parse({
+      name: 'Full Update',
+      prize_description: 'A prize',
+      scoring_rules: { exact_score: 5, correct_goal_diff: 3, correct_result: 1, wrong: 0 },
+    })
+    expect(result.name).toBe('Full Update')
+    expect(result.prize_description).toBe('A prize')
+    expect(result.scoring_rules?.exact_score).toBe(5)
   })
 })
