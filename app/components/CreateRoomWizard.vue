@@ -62,8 +62,10 @@ function useSuggested() {
   rules.correct_result = defaultScoringRules.correct_result
 }
 
-// Step 1 is the only one that can block progress (name required).
-const canAdvance = computed(() => (step.value === 1 ? name.value.trim().length > 0 : true))
+// Step 1 is the only one that can block progress: the name must be non-empty
+// AND contain at least one letter or number (rejects symbol-only names).
+const nameIsValid = computed(() => /[\p{L}\p{N}]/u.test(name.value))
+const canAdvance = computed(() => (step.value === 1 ? nameIsValid.value : true))
 
 function next() {
   if (step.value < steps.length && canAdvance.value) step.value += 1
@@ -215,7 +217,7 @@ function submit() {
           <input
             v-model.number="rules[row.key]"
             type="number"
-            min="0"
+            min="1"
             max="100"
             :aria-label="`Puntos por ${row.label}`"
             class="size-12 shrink-0 rounded-lg border border-input bg-background text-center text-lg font-bold tabular-nums focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
@@ -286,7 +288,7 @@ function submit() {
       <Button
         v-else
         type="button"
-        :disabled="submitting || !name.trim()"
+        :disabled="submitting || !nameIsValid"
         @click="submit"
       >
         {{ submitting ? 'Creando…' : 'Crear sala' }}
