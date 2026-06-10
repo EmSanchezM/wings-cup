@@ -5,6 +5,7 @@ import { Button } from '~/components/ui/button'
 import { Badge } from '~/components/ui/badge'
 import { Input } from '~/components/ui/input'
 import type { Room, RoomMemberView } from '#shared/types/rooms'
+import { updateRoomSchema } from '#shared/schemas/room.schema'
 import type { UpdateRoomInput } from '#shared/schemas/room.schema'
 
 // Auth enforced by @nuxtjs/supabase redirectOptions (covers /rooms/**)
@@ -73,16 +74,40 @@ function cancelEdit() {
   editError.value = null
 }
 
+// Maps the first Zod validation issue to a friendly Spanish message.
+function firstEditMessage(issues: { path: (string | number)[], code: string }[]): string {
+  const issue = issues[0]
+  const field = issue?.path[issue.path.length - 1]
+  if (field === 'name') {
+    return 'El nombre debe tener al menos una letra o número.'
+  }
+  if (issue?.path[0] === 'scoring_rules') {
+    if (issue.code === 'too_small') return 'Cada puntaje debe ser al menos 1.'
+    if (issue.code === 'too_big') return 'Cada puntaje no puede superar 100.'
+    return 'Los puntos deben ir de mayor a menor: marcador exacto > diferencia de gol > resultado.'
+  }
+  return 'Revisá los datos: hay un valor inválido.'
+}
+
 async function saveEdit() {
   if (!room.value) return
+  const patch: UpdateRoomInput = {
+    name: editName.value.trim(),
+    prize_description: editPrize.value.trim(),
+    scoring_rules: { ...editRules },
+  }
+
+  // Validate client-side against the same schema the API enforces, so the
+  // user gets an immediate, friendly message instead of a raw 400.
+  const check = updateRoomSchema.safeParse(patch)
+  if (!check.success) {
+    editError.value = firstEditMessage(check.error.issues)
+    return
+  }
+
   editSubmitting.value = true
   editError.value = null
   try {
-    const patch: UpdateRoomInput = {
-      name: editName.value.trim(),
-      prize_description: editPrize.value.trim(),
-      scoring_rules: { ...editRules },
-    }
     const updated = await roomClient.updateRoom(roomId, patch)
     if (!updated) return // 401 handled by guard
     room.value = updated
@@ -281,7 +306,7 @@ onMounted(async () => {
               <input
                 v-model.number="editRules.exact_score"
                 type="number"
-                min="0"
+                min="1"
                 max="100"
                 aria-label="Puntos por marcador exacto"
                 class="size-12 shrink-0 rounded-lg border border-input bg-background text-center text-lg font-bold tabular-nums focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
@@ -300,7 +325,7 @@ onMounted(async () => {
               <input
                 v-model.number="editRules.correct_goal_diff"
                 type="number"
-                min="0"
+                min="1"
                 max="100"
                 aria-label="Puntos por diferencia de gol"
                 class="size-12 shrink-0 rounded-lg border border-input bg-background text-center text-lg font-bold tabular-nums focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
@@ -319,7 +344,7 @@ onMounted(async () => {
               <input
                 v-model.number="editRules.correct_result"
                 type="number"
-                min="0"
+                min="1"
                 max="100"
                 aria-label="Puntos por resultado correcto"
                 class="size-12 shrink-0 rounded-lg border border-input bg-background text-center text-lg font-bold tabular-nums focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"

@@ -34,6 +34,20 @@ describe('createRoomSchema (R-ROOMS-07)', () => {
     expect(() => createRoomSchema.parse({ name: '   ' })).toThrow()
   })
 
+  it('rejects a name with no letters or numbers (symbols only)', () => {
+    expect(() => createRoomSchema.parse({ name: '.,&#@#' })).toThrow()
+  })
+
+  it('accepts a name that mixes symbols with at least one alphanumeric char', () => {
+    const result = createRoomSchema.parse({ name: 'Mundial 2026 ⚽' })
+    expect(result.name).toBe('Mundial 2026 ⚽')
+  })
+
+  it('accepts a digits-only name', () => {
+    const result = createRoomSchema.parse({ name: '2026' })
+    expect(result.name).toBe('2026')
+  })
+
   it('rejects missing name', () => {
     expect(() => createRoomSchema.parse({})).toThrow()
   })
@@ -93,6 +107,15 @@ describe('createRoomSchema (R-ROOMS-07)', () => {
     ).toThrow()
   })
 
+  it('rejects incoherent scoring_rules (not strictly descending)', () => {
+    expect(() =>
+      createRoomSchema.parse({
+        name: 'OK',
+        scoring_rules: { exact_score: 1, correct_goal_diff: 0, correct_result: 0 },
+      }),
+    ).toThrow()
+  })
+
   it('keeps the suggested defaults in sync (exact 5 / diff 3 / result 1)', () => {
     expect(defaultScoringRules).toMatchObject({
       exact_score: 5,
@@ -111,6 +134,18 @@ describe('updateRoomSchema', () => {
     const result = updateRoomSchema.parse({ name: 'New Name' })
     expect(result.name).toBe('New Name')
     expect(result.scoring_rules).toBeUndefined()
+  })
+
+  it('rejects a symbols-only name patch', () => {
+    expect(() => updateRoomSchema.parse({ name: '.,&#@#' })).toThrow()
+  })
+
+  it('rejects an incoherent scoring_rules patch', () => {
+    expect(() =>
+      updateRoomSchema.parse({
+        scoring_rules: { exact_score: 1, correct_goal_diff: 0, correct_result: 0, wrong: 0 },
+      }),
+    ).toThrow()
   })
 
   it('accepts prize_description-only patch', () => {
