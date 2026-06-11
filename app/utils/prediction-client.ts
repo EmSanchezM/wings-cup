@@ -17,5 +17,14 @@ export function makePredictionClient(fetchImpl: typeof $fetch) {
         `/api/rooms/${roomId}/predictions`,
       )
     },
+
+    async getMemberPredictions(
+      roomId: string,
+      memberId: string,
+    ): Promise<{ predictions: Prediction[], display_name: string }> {
+      return fetchImpl<{ predictions: Prediction[], display_name: string }>(
+        `/api/rooms/${roomId}/members/${memberId}/predictions`,
+      )
+    },
   }
 }
