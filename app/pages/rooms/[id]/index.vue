@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, reactive } from 'vue'
-import { Trophy, Users, Flag, BarChart3, Copy, Check, Pencil, Target } from 'lucide-vue-next'
+import { Trophy, Users, Flag, BarChart3, Copy, Check, Pencil, Target, ChevronRight } from 'lucide-vue-next'
 import { Button } from '~/components/ui/button'
 import { Badge } from '~/components/ui/badge'
 import { Input } from '~/components/ui/input'
@@ -457,25 +457,55 @@ onMounted(async () => {
             <span class="flex size-9 items-center justify-center rounded-full bg-primary/10 text-primary">
               <Users class="size-5" />
             </span>
-            <h2 class="text-sm font-semibold">
-              Miembros <span class="text-muted-foreground">({{ members.length }})</span>
-            </h2>
+            <div class="flex-1 min-w-0">
+              <h2 class="text-sm font-semibold">
+                Miembros <span class="text-muted-foreground">({{ members.length }})</span>
+              </h2>
+              <p class="mt-0.5 text-xs text-muted-foreground">
+                Tocá un miembro para ver sus predicciones — se revelan cuando empieza cada partido.
+              </p>
+            </div>
           </div>
           <ul class="space-y-1">
             <li
               v-for="member in members"
               :key="member.user_id"
-              class="flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-secondary/40"
             >
-              <span class="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-semibold text-secondary-foreground">
-                {{ memberInitials(member.display_name) }}
-              </span>
-              <span class="min-w-0 flex-1 truncate text-sm font-medium">
-                {{ member.display_name || 'Sin nombre' }}
-              </span>
-              <Badge :variant="member.role === 'owner' ? 'accent' : 'secondary'">
-                {{ member.role === 'owner' ? 'Dueño' : 'Miembro' }}
-              </Badge>
+              <!-- Own row: non-clickable (user goes to "Mis Predicciones" instead) -->
+              <div
+                v-if="member.user_id === user?.id"
+                class="flex items-center gap-3 rounded-lg px-2 py-2"
+              >
+                <span class="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/20 text-xs font-semibold text-primary">
+                  {{ memberInitials(member.display_name) }}
+                </span>
+                <span class="min-w-0 flex-1 truncate text-sm font-medium">
+                  {{ member.display_name || 'Sin nombre' }}
+                  <span class="ml-1.5 text-xs text-muted-foreground">(vos)</span>
+                </span>
+                <Badge :variant="member.role === 'owner' ? 'accent' : 'secondary'">
+                  {{ member.role === 'owner' ? 'Dueño' : 'Miembro' }}
+                </Badge>
+              </div>
+
+              <!-- Other members: clickable, navigates to their predictions -->
+              <NuxtLink
+                v-else
+                :to="`/rooms/${roomId}/members/${member.user_id}`"
+                class="flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-secondary/40 cursor-pointer"
+                data-testid="member-row-link"
+              >
+                <span class="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-semibold text-secondary-foreground">
+                  {{ memberInitials(member.display_name) }}
+                </span>
+                <span class="min-w-0 flex-1 truncate text-sm font-medium">
+                  {{ member.display_name || 'Sin nombre' }}
+                </span>
+                <Badge :variant="member.role === 'owner' ? 'accent' : 'secondary'">
+                  {{ member.role === 'owner' ? 'Dueño' : 'Miembro' }}
+                </Badge>
+                <ChevronRight class="size-4 shrink-0 text-muted-foreground" />
+              </NuxtLink>
             </li>
           </ul>
         </section>
