@@ -58,9 +58,13 @@ async function logout() {
           >
             {{ email }}
           </span>
-          <span class="flex size-8 items-center justify-center rounded-full bg-secondary text-xs font-semibold text-secondary-foreground">
+          <NuxtLink
+            to="/profile"
+            class="flex size-8 items-center justify-center rounded-full bg-secondary text-xs font-semibold text-secondary-foreground transition-colors hover:bg-secondary/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            aria-label="Tu perfil"
+          >
             {{ initials }}
-          </span>
+          </NuxtLink>
           <Button
             type="button"
             variant="ghost"
