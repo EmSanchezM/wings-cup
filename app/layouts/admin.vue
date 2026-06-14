@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { Shield, LogOut, ArrowLeft, CalendarClock } from 'lucide-vue-next'
 import { Button } from '~/components/ui/button'
 import { Badge } from '~/components/ui/badge'
@@ -13,6 +13,21 @@ const email = computed(() => {
   const u = user.value as { email?: string } | null
   return u?.email ?? ''
 })
+
+const initials = computed(() => {
+  const handle = email.value.split('@')[0] ?? ''
+  return handle.slice(0, 2).toUpperCase() || '··'
+})
+
+// OAuth providers (e.g. Google) expose the profile picture via user metadata.
+const avatarUrl = computed(() => {
+  const u = user.value as { user_metadata?: { avatar_url?: string, picture?: string } } | null
+  return u?.user_metadata?.avatar_url ?? u?.user_metadata?.picture ?? ''
+})
+
+// Fall back to initials if the user has no photo or the image fails to load.
+const avatarFailed = ref(false)
+const showAvatar = computed(() => avatarUrl.value !== '' && !avatarFailed.value)
 
 const sections = [
   { label: 'Partidos', to: '/admin/matches', icon: CalendarClock },
@@ -60,12 +75,25 @@ async function logout() {
               <span class="hidden sm:inline">Volver a la app</span>
             </NuxtLink>
           </Button>
-          <span
-            v-if="email"
-            class="hidden max-w-[12rem] truncate text-sm text-muted-foreground sm:inline"
+          <NuxtLink
+            to="/profile"
+            class="flex size-8 items-center justify-center overflow-hidden rounded-full bg-secondary text-xs font-semibold text-secondary-foreground transition-colors hover:bg-secondary/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            aria-label="Tu perfil"
           >
-            {{ email }}
-          </span>
+            <img
+              v-if="showAvatar"
+              :src="avatarUrl"
+              alt=""
+              referrerpolicy="no-referrer"
+              class="size-full object-cover"
+              data-testid="nav-avatar-img"
+              @error="avatarFailed = true"
+            >
+            <span
+              v-else
+              data-testid="nav-avatar-initials"
+            >{{ initials }}</span>
+          </NuxtLink>
           <Button
             type="button"
             variant="ghost"
