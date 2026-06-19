@@ -14,7 +14,7 @@ Built with Nuxt 4.4 + Supabase.
 | State | Pinia |
 | Validation | Zod |
 | Testing | Vitest v4 + @nuxt/test-utils v4 + Playwright |
-| Deploy | Vercel (cron jobs for match sync and prediction locking) |
+| Deploy | Vercel (app hosting); scheduled jobs run in-database via Supabase pg_cron |
 
 ---
 
@@ -40,8 +40,9 @@ Follow these steps on a clean checkout to get the project running locally.
    # NUXT_SUPABASE_SERVICE_KEY. NUXT_API_FOOTBALL_KEY can stay empty (match sync, not wired yet).
    # NUXT_PUBLIC_SITE_URL is optional; set it to the canonical origin for SEO/OG
    # absolute URLs (e.g. https://wings-cup.vercel.app). Falls back to request origin.
-   # Prediction locking runs in the database via Supabase pg_cron (lock_started_predictions),
-   # so no cron secret / HTTP cron endpoint is needed.
+   # Match transitions (scheduled -> live) and prediction locking run in the database
+   # via Supabase pg_cron (run_match_minute_cron, scheduled per-minute from the Supabase
+   # Dashboard), so no cron secret / HTTP cron endpoint is needed.
    ```
    Get your Supabase URL and keys from **Project Settings -> API** in the Supabase dashboard.
 
