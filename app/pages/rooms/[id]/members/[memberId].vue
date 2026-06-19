@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { Flag, ChevronLeft, ChevronRight, CalendarDays, Lock, Clock } from 'lucide-vue-next'
+import { Flag, ChevronLeft, ChevronRight, CalendarDays, Lock, Clock, Ban } from 'lucide-vue-next'
 import { Button } from '~/components/ui/button'
 import { makePredictionClient } from '~/utils/prediction-client'
 import { useMatches } from '~/composables/useMatches'
@@ -348,9 +348,9 @@ onMounted(async () => {
                 </div>
               </div>
 
-              <!-- Not yet revealed: locked_at is null for this match -->
+              <!-- Match not started yet: the pick stays hidden until kickoff. -->
               <div
-                v-else
+                v-else-if="entry.match.status === 'scheduled'"
                 class="flex items-center gap-3 rounded-2xl border border-dashed border-border bg-card/50 p-5"
                 data-testid="hidden-prediction-card"
               >
@@ -363,6 +363,31 @@ onMounted(async () => {
                   </p>
                   <p class="text-xs text-muted-foreground">
                     🔒 Se revela cuando empiece el partido
+                  </p>
+                </div>
+                <p class="shrink-0 text-xs text-muted-foreground tabular-nums">
+                  {{ formatKickoff(entry.match.kickoff_at) }}
+                </p>
+              </div>
+
+              <!-- Match already started but no locked prediction exists: the
+                   member never submitted a pick. A submitted pick would have
+                   been locked at kickoff and returned by the API, so its
+                   absence here unambiguously means "no prediction sent". -->
+              <div
+                v-else
+                class="flex items-center gap-3 rounded-2xl border border-dashed border-border bg-card/50 p-5"
+                data-testid="no-prediction-card"
+              >
+                <span class="flex size-9 shrink-0 items-center justify-center rounded-full bg-secondary text-muted-foreground">
+                  <Ban class="size-4" />
+                </span>
+                <div class="min-w-0 flex-1">
+                  <p class="text-sm font-medium">
+                    {{ entry.match.home_team }} vs {{ entry.match.away_team }}
+                  </p>
+                  <p class="text-xs text-muted-foreground">
+                    Sin predicción — no envió pronóstico para este partido
                   </p>
                 </div>
                 <p class="shrink-0 text-xs text-muted-foreground tabular-nums">
