@@ -23,6 +23,8 @@ const scheduledMatch: MatchListItem = {
   status: 'scheduled',
   home_score: null,
   away_score: null,
+  home_penalties: null,
+  away_penalties: null,
 }
 
 const liveMatch: MatchListItem = { ...scheduledMatch, id: '33333333-3333-4333-8333-333333333333', status: 'live' }
