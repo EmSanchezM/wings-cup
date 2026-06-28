@@ -179,6 +179,46 @@ describe('upsertPredictionHandler (R-PRED-01, R-PRED-02, R-PRED-03, R-PRED-05)',
     )
   })
 
+  it('persists predicted_advances (knockout pick) to the upsert payload', async () => {
+    const { client, spies } = makeClient({
+      membershipResult: { data: [memberRow], error: null },
+      matchResult: { data: { kickoff_at: FUTURE_KICKOFF }, error: null },
+      upsertResult: { data: predictionRow, error: null },
+    })
+
+    await upsertPredictionHandler({
+      supabase: client,
+      userId: USER_ID,
+      roomId: ROOM_ID,
+      input: { match_id: MATCH_ID, predicted_home: 1, predicted_away: 1, predicted_advances: 'away' },
+    })
+
+    expect(spies.upsertFn).toHaveBeenCalledWith(
+      expect.objectContaining({ predicted_advances: 'away' }),
+      expect.any(Object),
+    )
+  })
+
+  it('defaults predicted_advances to null when omitted', async () => {
+    const { client, spies } = makeClient({
+      membershipResult: { data: [memberRow], error: null },
+      matchResult: { data: { kickoff_at: FUTURE_KICKOFF }, error: null },
+      upsertResult: { data: predictionRow, error: null },
+    })
+
+    await upsertPredictionHandler({
+      supabase: client,
+      userId: USER_ID,
+      roomId: ROOM_ID,
+      input: { match_id: MATCH_ID, predicted_home: 2, predicted_away: 1 },
+    })
+
+    expect(spies.upsertFn).toHaveBeenCalledWith(
+      expect.objectContaining({ predicted_advances: null }),
+      expect.any(Object),
+    )
+  })
+
   it('throws when match is not found', async () => {
     const { client } = makeClient({
       membershipResult: { data: [memberRow], error: null },

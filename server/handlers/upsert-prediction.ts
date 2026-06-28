@@ -53,6 +53,8 @@ export async function upsertPredictionHandler(
         match_id: input.match_id,
         predicted_home: input.predicted_home,
         predicted_away: input.predicted_away,
+        // Knockout tiebreak pick; null for group-stage / unset predictions.
+        predicted_advances: input.predicted_advances ?? null,
         room_id: roomId,
         user_id: userId,
       },
