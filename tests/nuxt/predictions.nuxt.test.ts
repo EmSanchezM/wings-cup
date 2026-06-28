@@ -30,6 +30,8 @@ const scheduledMatch: MatchListItem = {
   status: 'scheduled',
   home_score: null,
   away_score: null,
+  home_penalties: null,
+  away_penalties: null,
 }
 
 const finishedMatch: MatchListItem = {
