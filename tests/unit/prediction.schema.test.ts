@@ -122,4 +122,55 @@ describe('UpsertPredictionSchema (R-PRED-04)', () => {
     })
     expect(result.success).toBe(false)
   })
+
+  describe('predicted_advances (knockout tiebreak pick)', () => {
+    it('accepts "home"', () => {
+      const result = UpsertPredictionSchema.safeParse({
+        match_id: VALID_UUID,
+        predicted_home: 1,
+        predicted_away: 1,
+        predicted_advances: 'home',
+      })
+      expect(result.success).toBe(true)
+    })
+
+    it('accepts "away"', () => {
+      const result = UpsertPredictionSchema.safeParse({
+        match_id: VALID_UUID,
+        predicted_home: 1,
+        predicted_away: 1,
+        predicted_advances: 'away',
+      })
+      expect(result.success).toBe(true)
+    })
+
+    it('accepts null (no pick / group stage)', () => {
+      const result = UpsertPredictionSchema.safeParse({
+        match_id: VALID_UUID,
+        predicted_home: 1,
+        predicted_away: 1,
+        predicted_advances: null,
+      })
+      expect(result.success).toBe(true)
+    })
+
+    it('accepts omission (optional)', () => {
+      const result = UpsertPredictionSchema.safeParse({
+        match_id: VALID_UUID,
+        predicted_home: 1,
+        predicted_away: 1,
+      })
+      expect(result.success).toBe(true)
+    })
+
+    it('rejects an arbitrary string (team name, "draw", etc.)', () => {
+      const result = UpsertPredictionSchema.safeParse({
+        match_id: VALID_UUID,
+        predicted_home: 1,
+        predicted_away: 1,
+        predicted_advances: 'Brazil',
+      })
+      expect(result.success).toBe(false)
+    })
+  })
 })
