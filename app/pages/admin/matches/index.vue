@@ -54,6 +54,8 @@ interface EditDraft {
   status: NonNullable<MatchUpdate['status']>
   home_score: number | undefined
   away_score: number | undefined
+  home_penalties: number | undefined
+  away_penalties: number | undefined
 }
 
 const router = useRouter()
@@ -149,6 +151,8 @@ function startEdit(match: MatchListItem) {
     status: match.status,
     home_score: match.home_score ?? undefined,
     away_score: match.away_score ?? undefined,
+    home_penalties: match.home_penalties ?? undefined,
+    away_penalties: match.away_penalties ?? undefined,
   }
 }
 
@@ -156,13 +160,48 @@ function cancelEdit(id: string) {
   editDrafts[id] = undefined
 }
 
+// Penalties only apply to a knockout tie: non-group stage with an equal score.
+function isKnockoutDraw(match: MatchListItem): boolean {
+  const draft = editDrafts[match.id]
+  if (!draft) return false
+  return (
+    match.stage !== 'group'
+    && typeof draft.home_score === 'number'
+    && typeof draft.away_score === 'number'
+    && draft.home_score === draft.away_score
+  )
+}
+
 async function saveEdit(id: string) {
   const draft = editDrafts[id]
   if (!draft) return
+
+  const match = matchesState.data.value.find(m => m.id === id)
+  const knockoutDraw = match != null && isKnockoutDraw(match)
+
+  // A finished knockout tie must name a penalty winner so the bracket advances.
+  if (draft.status === 'finished' && knockoutDraw) {
+    if (typeof draft.home_penalties !== 'number' || typeof draft.away_penalties !== 'number') {
+      saveError.value = 'Empate en eliminatoria: cargá los penales de ambos equipos.'
+      return
+    }
+    if (draft.home_penalties === draft.away_penalties) {
+      saveError.value = 'Los penales no pueden quedar empatados — tiene que haber un ganador.'
+      return
+    }
+  }
+
+  // Send penalties only for a knockout tie; otherwise clear them (both null).
+  const payload: MatchUpdate = {
+    ...draft,
+    home_penalties: knockoutDraw ? (draft.home_penalties ?? null) : null,
+    away_penalties: knockoutDraw ? (draft.away_penalties ?? null) : null,
+  }
+
   savingId.value = id
   saveError.value = null
   try {
-    await matchesState.updateMatch(id, draft)
+    await matchesState.updateMatch(id, payload)
     editDrafts[id] = undefined
     await matchesState.load()
   }
@@ -451,6 +490,12 @@ onMounted(async () => {
                 <span class="text-sm text-muted-foreground">
                   Marcador
                   <span class="ml-2 font-mono text-lg font-bold text-foreground">{{ match.home_score ?? '–' }} - {{ match.away_score ?? '–' }}</span>
+                  <span
+                    v-if="match.home_penalties != null && match.away_penalties != null"
+                    class="ml-2 text-xs font-medium text-accent"
+                  >
+                    (pen. {{ match.home_penalties }}-{{ match.away_penalties }})
+                  </span>
                 </span>
                 <Button
                   variant="outline"
@@ -464,59 +509,89 @@ onMounted(async () => {
 
               <form
                 v-else
-                class="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_auto_auto_auto] sm:items-center"
+                class="space-y-2"
                 @submit.prevent="saveEdit(match.id)"
               >
-                <select
-                  v-model="editDrafts[match.id]!.status"
-                  class="rounded-md border border-input bg-background px-2 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                <div class="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_auto_auto_auto] sm:items-center">
+                  <select
+                    v-model="editDrafts[match.id]!.status"
+                    class="rounded-md border border-input bg-background px-2 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  >
+                    <option value="scheduled">
+                      Programado
+                    </option>
+                    <option value="live">
+                      En vivo
+                    </option>
+                    <option value="finished">
+                      Finalizado
+                    </option>
+                    <option value="postponed">
+                      Pospuesto
+                    </option>
+                  </select>
+                  <Input
+                    v-model.number="editDrafts[match.id]!.home_score"
+                    type="number"
+                    min="0"
+                    max="50"
+                    placeholder="Local"
+                    class="w-20"
+                  />
+                  <Input
+                    v-model.number="editDrafts[match.id]!.away_score"
+                    type="number"
+                    min="0"
+                    max="50"
+                    placeholder="Visita"
+                    class="w-20"
+                  />
+                  <div class="flex gap-2">
+                    <Button
+                      type="submit"
+                      size="sm"
+                      :disabled="savingId === match.id"
+                    >
+                      {{ savingId === match.id ? 'Guardando…' : 'Guardar' }}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      :disabled="savingId === match.id"
+                      @click="cancelEdit(match.id)"
+                    >
+                      Cancelar
+                    </Button>
+                  </div>
+                </div>
+
+                <!-- Penalty shootout — only for a knockout tie. -->
+                <div
+                  v-if="isKnockoutDraw(match)"
+                  data-testid="admin-penalties"
+                  class="flex flex-wrap items-center gap-2 rounded-xl border border-accent/30 bg-accent/5 px-3 py-2"
                 >
-                  <option value="scheduled">
-                    Programado
-                  </option>
-                  <option value="live">
-                    En vivo
-                  </option>
-                  <option value="finished">
-                    Finalizado
-                  </option>
-                  <option value="postponed">
-                    Pospuesto
-                  </option>
-                </select>
-                <Input
-                  v-model.number="editDrafts[match.id]!.home_score"
-                  type="number"
-                  min="0"
-                  max="50"
-                  placeholder="Local"
-                  class="w-20"
-                />
-                <Input
-                  v-model.number="editDrafts[match.id]!.away_score"
-                  type="number"
-                  min="0"
-                  max="50"
-                  placeholder="Visita"
-                  class="w-20"
-                />
-                <div class="flex gap-2">
-                  <Button
-                    type="submit"
-                    size="sm"
-                    :disabled="savingId === match.id"
-                  >
-                    {{ savingId === match.id ? 'Guardando…' : 'Guardar' }}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    :disabled="savingId === match.id"
-                    @click="cancelEdit(match.id)"
-                  >
-                    Cancelar
-                  </Button>
+                  <span class="text-xs font-medium text-muted-foreground">
+                    Empate — definición por penales
+                  </span>
+                  <Input
+                    v-model.number="editDrafts[match.id]!.home_penalties"
+                    type="number"
+                    min="0"
+                    max="50"
+                    placeholder="Pen. local"
+                    class="w-24"
+                  />
+                  <span class="text-xs text-muted-foreground">-</span>
+                  <Input
+                    v-model.number="editDrafts[match.id]!.away_penalties"
+                    type="number"
+                    min="0"
+                    max="50"
+                    placeholder="Pen. visita"
+                    class="w-24"
+                  />
                 </div>
               </form>
             </li>

@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-const STAGE_VALUES = ['group', 'round_of_16', 'quarter', 'semi', 'final', 'third_place'] as const
+const STAGE_VALUES = ['group', 'round_of_32', 'round_of_16', 'quarter', 'semi', 'final', 'third_place'] as const
 const STATUS_VALUES = ['scheduled', 'live', 'finished', 'postponed'] as const
 
 export const stageEnum = z.enum(STAGE_VALUES)
@@ -17,6 +17,8 @@ export const MatchSchema = z.object({
   status: statusEnum,
   home_score: z.number().int().nullable(),
   away_score: z.number().int().nullable(),
+  home_penalties: z.number().int().nullable(),
+  away_penalties: z.number().int().nullable(),
   created_at: z.string(),
 })
 
@@ -27,6 +29,8 @@ export const UpdateMatchSchema = z
     status: statusEnum.optional(),
     home_score: z.number().int().min(0).nullable().optional(),
     away_score: z.number().int().min(0).nullable().optional(),
+    home_penalties: z.number().int().min(0).nullable().optional(),
+    away_penalties: z.number().int().min(0).nullable().optional(),
     home_team: z.string().min(1).optional(),
     away_team: z.string().min(1).optional(),
     stage: stageEnum.optional(),
@@ -41,6 +45,13 @@ export const UpdateMatchSchema = z
     {
       message: "home_score and away_score are required when status is 'finished'",
       path: ['home_score'],
+    },
+  )
+  .refine(
+    (data) => (data.home_penalties == null) === (data.away_penalties == null),
+    {
+      message: 'home_penalties and away_penalties must be set together',
+      path: ['home_penalties'],
     },
   )
 

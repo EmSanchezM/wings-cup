@@ -13,9 +13,20 @@ export type MatchListItem = Pick<
   | 'status'
   | 'home_score'
   | 'away_score'
+  | 'home_penalties'
+  | 'away_penalties'
   | 'external_id'
 >
 
 export type MatchUpdate = Partial<
-  Pick<Match, 'status' | 'home_score' | 'away_score' | 'home_team' | 'away_team'>
+  Pick<
+    Match,
+    | 'status'
+    | 'home_score'
+    | 'away_score'
+    | 'home_penalties'
+    | 'away_penalties'
+    | 'home_team'
+    | 'away_team'
+  >
 >

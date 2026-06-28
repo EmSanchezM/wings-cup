@@ -140,11 +140,13 @@ export type Database = {
       }
       matches: {
         Row: {
+          away_penalties: number | null
           away_score: number | null
           away_team: string
           created_at: string
           external_id: string | null
           group_name: string | null
+          home_penalties: number | null
           home_score: number | null
           home_team: string
           id: string
@@ -153,11 +155,13 @@ export type Database = {
           status: string
         }
         Insert: {
+          away_penalties?: number | null
           away_score?: number | null
           away_team: string
           created_at?: string
           external_id?: string | null
           group_name?: string | null
+          home_penalties?: number | null
           home_score?: number | null
           home_team: string
           id?: string
@@ -166,11 +170,13 @@ export type Database = {
           status?: string
         }
         Update: {
+          away_penalties?: number | null
           away_score?: number | null
           away_team?: string
           created_at?: string
           external_id?: string | null
           group_name?: string | null
+          home_penalties?: number | null
           home_score?: number | null
           home_team?: string
           id?: string
