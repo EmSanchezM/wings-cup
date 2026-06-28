@@ -14,6 +14,8 @@ describe('MatchSchema (R-MATCHES-02, R-MATCHES-04)', () => {
       status: 'scheduled',
       home_score: null,
       away_score: null,
+      home_penalties: null,
+      away_penalties: null,
       created_at: '2026-05-17T00:00:00Z',
     })
     expect(result.home_team).toBe('Mexico')
@@ -31,6 +33,8 @@ describe('MatchSchema (R-MATCHES-02, R-MATCHES-04)', () => {
       status: 'finished',
       home_score: 1,
       away_score: 0,
+      home_penalties: null,
+      away_penalties: null,
       created_at: '2026-05-17T00:00:00Z',
     })
     expect(result.status).toBe('finished')
@@ -105,5 +109,33 @@ describe('UpdateMatchSchema (R-MATCHES-04)', () => {
   it('accepts empty object (all fields optional)', () => {
     const result = UpdateMatchSchema.parse({})
     expect(result).toEqual({})
+  })
+
+  it('accepts a finished knockout tie with both penalty counts', () => {
+    const result = UpdateMatchSchema.parse({
+      status: 'finished',
+      home_score: 1,
+      away_score: 1,
+      home_penalties: 4,
+      away_penalties: 2,
+    })
+    expect(result.home_penalties).toBe(4)
+    expect(result.away_penalties).toBe(2)
+  })
+
+  it('rejects penalties set on only one side', () => {
+    expect(() =>
+      UpdateMatchSchema.parse({
+        status: 'finished',
+        home_score: 1,
+        away_score: 1,
+        home_penalties: 4,
+      }),
+    ).toThrow()
+  })
+
+  it('accepts round_of_32 as a valid stage', () => {
+    const result = UpdateMatchSchema.parse({ stage: 'round_of_32' })
+    expect(result.stage).toBe('round_of_32')
   })
 })
