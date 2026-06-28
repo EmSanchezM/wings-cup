@@ -33,7 +33,7 @@ const finishedMatch: MatchListItem = { ...scheduledMatch, id: '22222222-2222-422
 
 const myPrediction: Prediction = {
   id: 'pred-1', room_id: ROOM_ID, user_id: 'user-me', match_id: scheduledMatch.id,
-  predicted_home: 2, predicted_away: 1, locked_at: null, points_awarded: 0,
+  predicted_home: 2, predicted_away: 1, predicted_advances: null, locked_at: null, points_awarded: 0,
   created_at: '2026-05-24T00:00:00Z', updated_at: '2026-05-24T00:00:00Z',
 }
 

@@ -50,6 +50,7 @@ const lockedPrediction: Prediction = {
   match_id: finishedMatch.id,
   predicted_home: 2,
   predicted_away: 3,
+  predicted_advances: null,
   locked_at: '2026-06-11T13:00:00Z',
   points_awarded: 0,
   created_at: '2026-05-24T00:00:00Z',

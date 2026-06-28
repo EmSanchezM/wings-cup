@@ -49,6 +49,7 @@ const existingPrediction: Prediction = {
   match_id: scheduledMatch.id,
   predicted_home: 2,
   predicted_away: 1,
+  predicted_advances: null,
   locked_at: null,
   points_awarded: 0,
   created_at: '2026-05-24T00:00:00Z',
