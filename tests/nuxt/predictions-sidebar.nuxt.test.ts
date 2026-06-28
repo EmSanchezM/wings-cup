@@ -26,6 +26,8 @@ const scheduledMatch: MatchListItem = {
   status: 'scheduled',
   home_score: null,
   away_score: null,
+  home_penalties: null,
+  away_penalties: null,
 }
 const finishedMatch: MatchListItem = { ...scheduledMatch, id: '22222222-2222-4222-8222-222222222222', status: 'finished', home_score: 2, away_score: 1 }
 
