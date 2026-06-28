@@ -23,6 +23,9 @@ const emit = defineEmits<{
 
 const predictedHome = ref<number>(props.existingPrediction?.predicted_home ?? 0)
 const predictedAway = ref<number>(props.existingPrediction?.predicted_away ?? 0)
+const predictedAdvances = ref<'home' | 'away' | null>(
+  (props.existingPrediction?.predicted_advances as 'home' | 'away' | null) ?? null,
+)
 const submitting = ref(false)
 const error = ref<string | null>(null)
 const success = ref(false)
@@ -31,6 +34,10 @@ const isLocked = computed(() => props.existingPrediction?.locked_at !== null && 
 
 // Status-based read-only mode (D8) — independent of lock state
 const isReadonly = computed(() => props.match.status !== 'scheduled')
+
+// Knockout matches need a tiebreak pick: who advances if the tie goes to
+// penalties. Group-stage draws are legitimate and have no winner.
+const isKnockout = computed(() => props.match.stage !== 'group')
 
 const predClient = makePredictionClient($fetch)
 
@@ -49,6 +56,8 @@ async function handleSubmit() {
       match_id: props.match.id,
       predicted_home: predictedHome.value,
       predicted_away: predictedAway.value,
+      // Only knockout matches carry a tiebreak pick.
+      predicted_advances: isKnockout.value ? predictedAdvances.value : null,
     })
     success.value = true
     emit('submitted', result.prediction)
@@ -195,6 +204,52 @@ function formatKickoff(kickoffAt: string): string {
           <span class="w-full truncate text-sm font-semibold">{{ match.away_team }}</span>
         </label>
       </div>
+
+      <!-- Knockout tiebreak: who advances if it ends level and goes to penalties.
+           +1 bonus for the correct pick. Hidden for group-stage matches. -->
+      <fieldset
+        v-if="isKnockout"
+        class="space-y-2 rounded-xl bg-secondary/40 px-4 py-3"
+        data-testid="advance-pick"
+      >
+        <legend class="text-xs font-medium text-muted-foreground">
+          Si empatan, ¿quién avanza? <span class="text-accent">+1</span>
+        </legend>
+        <div class="grid grid-cols-2 gap-2">
+          <label
+            class="flex cursor-pointer items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition"
+            :class="predictedAdvances === 'home'
+              ? 'border-accent bg-accent/10 text-accent'
+              : 'border-input text-muted-foreground hover:border-accent/50'"
+          >
+            <input
+              v-model="predictedAdvances"
+              type="radio"
+              name="advances"
+              value="home"
+              class="sr-only"
+              :disabled="isLocked || isReadonly"
+            >
+            <span class="truncate">{{ match.home_team }}</span>
+          </label>
+          <label
+            class="flex cursor-pointer items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition"
+            :class="predictedAdvances === 'away'
+              ? 'border-accent bg-accent/10 text-accent'
+              : 'border-input text-muted-foreground hover:border-accent/50'"
+          >
+            <input
+              v-model="predictedAdvances"
+              type="radio"
+              name="advances"
+              value="away"
+              class="sr-only"
+              :disabled="isLocked || isReadonly"
+            >
+            <span class="truncate">{{ match.away_team }}</span>
+          </label>
+        </div>
+      </fieldset>
 
       <p class="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
         <Clock class="size-3.5" />

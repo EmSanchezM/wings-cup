@@ -8,4 +8,5 @@ export type UpsertPredictionInput = {
   match_id: string
   predicted_home: number
   predicted_away: number
+  predicted_advances?: 'home' | 'away' | null
 }

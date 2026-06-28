@@ -448,6 +448,23 @@ onMounted(async () => {
                 +{{ scoringRules.correct_result }}
               </Badge>
             </li>
+
+            <li class="flex items-center justify-between gap-3 rounded-xl bg-secondary/40 px-4 py-3">
+              <div class="min-w-0">
+                <p class="text-sm font-medium">
+                  Ganador en desempate
+                </p>
+                <p class="text-xs text-muted-foreground">
+                  En eliminación: acertás quién avanza si empatan y se define por penales.
+                </p>
+              </div>
+              <Badge
+                variant="accent"
+                class="shrink-0 font-mono text-sm tabular-nums"
+              >
+                +1
+              </Badge>
+            </li>
           </ul>
         </section>
 

@@ -193,6 +193,7 @@ export type Database = {
           locked_at: string | null
           match_id: string
           points_awarded: number
+          predicted_advances: string | null
           predicted_away: number
           predicted_home: number
           room_id: string
@@ -205,6 +206,7 @@ export type Database = {
           locked_at?: string | null
           match_id: string
           points_awarded?: number
+          predicted_advances?: string | null
           predicted_away: number
           predicted_home: number
           room_id: string
@@ -217,6 +219,7 @@ export type Database = {
           locked_at?: string | null
           match_id?: string
           points_awarded?: number
+          predicted_advances?: string | null
           predicted_away?: number
           predicted_home?: number
           room_id?: string
