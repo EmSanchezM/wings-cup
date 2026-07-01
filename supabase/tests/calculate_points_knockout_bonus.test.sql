@@ -5,8 +5,8 @@
 --   - knockout tie decided on penalties + correct predicted_advances -> +1 on
 --     top of the scoreline bucket (exact draw 5 + 1 = 6)
 --   - correct scoreline but WRONG advances pick -> no bonus
---   - correct advances pick but match decided in regulation (non-level score,
---     no penalties) -> no bonus (winner already shows in the scoreline)
+--   - correct advances pick with a match decided in regulation (non-level
+--     score) -> +1 as well (rule generalised in 00024; previously no bonus)
 --   - group-stage draw -> never a bonus even with a pick
 --
 -- Run with:  supabase test db
@@ -48,7 +48,7 @@ insert into predictions (room_id, user_id, match_id, predicted_home, predicted_a
   ('00000000-0000-0000-0000-0000000000b1', '00000000-0000-0000-0000-0000000000a1', '00000000-0000-0000-0000-0000000000c1', 1, 1, 'home', now()),
   -- m2: exact draw hit (1-1) but WRONG advances pick (away) -> 5 only
   ('00000000-0000-0000-0000-0000000000b1', '00000000-0000-0000-0000-0000000000a1', '00000000-0000-0000-0000-0000000000c2', 1, 1, 'away', now()),
-  -- m3: exact score hit (2-1), advances pick set but match not a tie -> 5 only
+  -- m3: exact score hit (2-1) + correct advances pick (home) in regulation -> 5 + 1 = 6 (00024)
   ('00000000-0000-0000-0000-0000000000b1', '00000000-0000-0000-0000-0000000000a1', '00000000-0000-0000-0000-0000000000c3', 2, 1, 'home', now()),
   -- m4: group draw hit (0-0), advances pick set -> 5 only (no bonus in group)
   ('00000000-0000-0000-0000-0000000000b1', '00000000-0000-0000-0000-0000000000a1', '00000000-0000-0000-0000-0000000000c4', 0, 0, 'home', now());
@@ -89,21 +89,21 @@ select is(
 
 select is(
   (select points_awarded from predictions where match_id = '00000000-0000-0000-0000-0000000000c3'),
-  5,
-  'match decided in regulation = exact score only, no bonus');
+  6,
+  'match decided in regulation + correct advances pick = exact score + 1 (00024)');
 
 select is(
   (select points_awarded from predictions where match_id = '00000000-0000-0000-0000-0000000000c4'),
   5,
   'group-stage draw never grants the knockout bonus');
 
--- Total across all four matches: 6 + 5 + 5 + 5 = 21.
+-- Total across all four matches: 6 + 5 + 6 + 5 = 22 (two bonuses: m1 pens, m3 regulation).
 select is(
   (select total_points from room_members
      where room_id = '00000000-0000-0000-0000-0000000000b1'
        and user_id = '00000000-0000-0000-0000-0000000000a1'),
-  21,
-  'room_members total reflects exactly one +1 bonus across the four matches');
+  22,
+  'room_members total reflects the two +1 bonuses across the four matches');
 
 select finish();
 rollback;
