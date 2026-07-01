@@ -57,6 +57,23 @@ const lockedPrediction: Prediction = {
   updated_at: '2026-05-24T00:00:00Z',
 }
 
+const knockoutMatch: MatchListItem = {
+  ...finishedMatch,
+  id: '33333333-3333-4333-8333-333333333333',
+  external_id: 'fifa26-074',
+  home_team: 'Inglaterra',
+  away_team: 'RD Congo',
+  stage: 'round_of_32',
+  group_name: null,
+}
+
+const knockoutPrediction: Prediction = {
+  ...lockedPrediction,
+  id: 'pred-0002-0000-0000-000000000002',
+  match_id: knockoutMatch.id,
+  predicted_advances: 'home',
+}
+
 // ---------------------------------------------------------------------------
 // Mock useRoute — this page needs BOTH room id and member id.
 // ---------------------------------------------------------------------------
@@ -145,5 +162,22 @@ describe('members/[memberId].vue — no-prediction card', () => {
     const wrapper = await mountMemberPage()
     expect(wrapper.find('[data-testid="member-prediction-card"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="no-prediction-card"]').exists()).toBe(false)
+  })
+
+  it('T-MP-04: knockout prediction with an advance pick → shows the chosen team', async () => {
+    stubFetch([knockoutMatch], [knockoutPrediction])
+    const wrapper = await mountMemberPage()
+    const pick = wrapper.find('[data-testid="advance-pick-display"]')
+    expect(pick.exists()).toBe(true)
+    // predicted_advances 'home' → the home team name is shown
+    expect(pick.text()).toContain('Pasa')
+    expect(pick.text()).toContain('Inglaterra')
+    expect(pick.text()).not.toContain('RD Congo')
+  })
+
+  it('T-MP-05: group-stage prediction → no advance pick display', async () => {
+    stubFetch([finishedMatch], [lockedPrediction])
+    const wrapper = await mountMemberPage()
+    expect(wrapper.find('[data-testid="advance-pick-display"]').exists()).toBe(false)
   })
 })
