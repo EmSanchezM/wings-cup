@@ -322,6 +322,25 @@ onMounted(async () => {
                   </div>
                 </div>
 
+                <!-- Knockout advance pick: which team the member chose to go
+                     through. A correct pick earns the +1 bonus. Group-stage
+                     matches have no advance pick. -->
+                <div
+                  v-if="entry.match.stage !== 'group' && entry.prediction.predicted_advances"
+                  class="flex items-center justify-center gap-2 rounded-lg bg-secondary/40 px-3 py-2 text-xs font-medium text-muted-foreground"
+                  data-testid="advance-pick-display"
+                >
+                  <span>Pasa:</span>
+                  <TeamFlag
+                    :team="entry.prediction.predicted_advances === 'home' ? entry.match.home_team : entry.match.away_team"
+                    :size="20"
+                  />
+                  <span class="font-semibold text-foreground">
+                    {{ entry.prediction.predicted_advances === 'home' ? entry.match.home_team : entry.match.away_team }}
+                  </span>
+                  <span class="text-accent">+1</span>
+                </div>
+
                 <p class="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
                   <Clock class="size-3.5" />
                   {{ formatKickoff(entry.match.kickoff_at) }}
