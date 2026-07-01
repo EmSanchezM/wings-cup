@@ -35,8 +35,9 @@ const isLocked = computed(() => props.existingPrediction?.locked_at !== null && 
 // Status-based read-only mode (D8) — independent of lock state
 const isReadonly = computed(() => props.match.status !== 'scheduled')
 
-// Knockout matches need a tiebreak pick: who advances if the tie goes to
-// penalties. Group-stage draws are legitimate and have no winner.
+// Knockout matches carry an "advance pick": who goes through. A correct pick
+// earns +1 regardless of how the tie is decided (regulation, extra time, or
+// penalties). Group-stage draws are legitimate and have no winner.
 const isKnockout = computed(() => props.match.stage !== 'group')
 
 const predClient = makePredictionClient($fetch)
@@ -205,15 +206,15 @@ function formatKickoff(kickoffAt: string): string {
         </label>
       </div>
 
-      <!-- Knockout tiebreak: who advances if it ends level and goes to penalties.
-           +1 bonus for the correct pick. Hidden for group-stage matches. -->
+      <!-- Knockout advance pick: who goes through. +1 bonus for the correct pick,
+           however the match is decided. Hidden for group-stage matches. -->
       <fieldset
         v-if="isKnockout"
         class="space-y-2 rounded-xl bg-secondary/40 px-4 py-3"
         data-testid="advance-pick"
       >
         <legend class="text-xs font-medium text-muted-foreground">
-          Si empatan, ¿quién avanza? <span class="text-accent">+1</span>
+          ¿Quién avanza? <span class="text-accent">+1</span>
         </legend>
         <div class="grid grid-cols-2 gap-2">
           <label
